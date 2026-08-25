@@ -1,0 +1,51 @@
+version: 2.1
+
+executors:
+  cypress-node:
+    docker:
+      - image: cypress/browsers:node-20.14.0-chrome-125.0.6422.141-1-ff-126.0-edge-125.0.2535.85-1
+    working_directory: ~/magickvoice-validations
+
+jobs:
+  run-validations:
+    executor: cypress-node
+    steps:
+      - checkout
+
+      - restore_cache:
+          keys:
+            - v1-deps-{{ checksum "package.json" }}
+            - v1-deps-
+
+      - run:
+          name: Install dependencies
+          command: npm ci
+
+      - save_cache:
+          key: v1-deps-{{ checksum "package.json" }}
+          paths:
+            - ~/.npm
+            - ~/.cache/Cypress
+            - node_modules
+
+      - run:
+          name: Run Cypress Auth and Page Validations
+          command: npm run cy:run
+
+      - store_artifacts:
+          path: cypress/screenshots
+          destination: cypress-screenshots
+
+      - store_test_results:
+          path: cypress/results
+
+workflows:
+  version: 2
+  validation-pipeline:
+    jobs:
+      - run-validations:
+          context: magickvoice-staging
+          filters:
+            branches:
+              only:
+                - main

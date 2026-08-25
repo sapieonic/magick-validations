@@ -1,0 +1,70 @@
+{
+  "user": {
+    "id": "3eabeffd-20b5-4c40-8954-f33d44a2753c",
+    "firebase_uid": "NLo2cERWivP0i8piTI3DGUhABDo1",
+    "email": "jagannathpatro234@gmail.com",
+    "display_name": "Jagannath Patro",
+    "avatar_url": "https://lh3.googleusercontent.com/a/ACg8ocLrcvABfGwTeX2bSgJzl5zWTNi-DVhQEXtoCJcv_IlZ1GRdEzM2=s96-c",
+    "status": "active",
+    "created_at": "2026-08-23T18:24:20.750Z",
+    "updated_at": "2026-08-23T18:24:28.428Z",
+    "phone_number": "+916371813048"
+  },
+  "tenants": [
+    {
+      "id": "72c9ea58-af5e-46a1-b602-b96b86cb531b",
+      "name": "Jagannath Patro's Organization",
+      "slug": "gmail-d28e1p",
+      "settings": {
+        "enable_recording": false,
+        "allowed_pipelines": [
+          "bronze",
+          "copper",
+          "silver",
+          "gold",
+          "gold-ii",
+          "platinum"
+        ]
+      },
+      "status": "active",
+      "created_at": "2026-08-23T18:24:20.750Z",
+      "updated_at": "2026-08-24T14:32:17.995Z"
+    }
+  ],
+  "memberships": [
+    {
+      "id": "a9c633e2-ae1a-44d2-9e01-94abb74c1ef6",
+      "user_id": "3eabeffd-20b5-4c40-8954-f33d44a2753c",
+      "tenant_id": "72c9ea58-af5e-46a1-b602-b96b86cb531b",
+      "account_id": null,
+      "role": "tenant_owner",
+      "status": "active",
+      "invited_by": null,
+      "created_at": "2026-08-23T18:24:20.750Z",
+      "updated_at": "2026-08-23T18:24:20.750Z"
+    }
+  ],
+  "governance": {
+    "calls": true,
+    "calls.analytics": true,
+    "calls.recording": true,
+    "calls.dialer": false,
+    "calls.dialer.analytics": false,
+    "sip": false,
+    "messaging": true,
+    "messaging.whatsapp": true,
+    "messaging.telegram": true,
+    "messaging.email": true,
+    "messaging.whatsapp_personal": false,
+    "messaging.whatsapp_personal_groups": false,
+    "ivr": true,
+    "campaigns": true,
+    "scheduling": true,
+    "knowledge_bases": false,
+    "escalation": false,
+    "agency": false,
+    "agency.recording": false,
+    "agency.analytics": false
+  },
+  "is_new": false
+}
