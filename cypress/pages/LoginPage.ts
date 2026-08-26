@@ -1,6 +1,5 @@
 
 class LoginPage {
-  // Selectors for Login UI components
   path = "/login";
   txtusername = "input[type='email'], input[name='email'], input[placeholder*='email'], input[placeholder*='Email']";
   txtpassword = "input[type='password'], input[name='password']";

@@ -45,7 +45,3 @@ workflows:
     jobs:
       - run-validations:
           context: magickvoice-staging
-          filters:
-            branches:
-              only:
-                - main

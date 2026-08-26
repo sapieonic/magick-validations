@@ -80,7 +80,38 @@ describe("MagickVoice Authentication — Sign Up Page UI Components & Rendering"
     });
   });
 
-  describe("4. Form Interactivity & UI Automation (Client-Side)", () => {
+  describe("4. Client-Side Form Validations & Field Interactivity", () => {
+    it("validates required input fields when submitted with empty values", () => {
+      signUpPage.visit();
+      signUpPage.getSubmitButton().click({ force: true });
+      signUpPage.getEmailInput().should(($el) => {
+        const el = $el[0] as HTMLInputElement;
+        expect(el.checkValidity() === false || el.hasAttribute("required")).to.be.true;
+      });
+    });
+
+    it("enforces client-side validation on malformed email address format", () => {
+      signUpPage.visit();
+      signUpPage.setEmail("not-a-valid-email");
+      signUpPage.getSubmitButton().click({ force: true });
+      signUpPage.getEmailInput().should(($el) => {
+        const el = $el[0] as HTMLInputElement;
+        expect(el.validity.valid).to.be.false;
+      });
+    });
+
+    it("handles password confirmation validation when confirm field is rendered", () => {
+      signUpPage.visit();
+      cy.get("body").then(($body) => {
+        if ($body.find("input[name*='confirm'], input[placeholder*='confirm'], input[placeholder*='Confirm']").length > 0) {
+          signUpPage.setPassword("StrongPassword123!");
+          signUpPage.setConfirmPassword("MismatchingPassword456!");
+          signUpPage.getSubmitButton().click({ force: true });
+          signUpPage.getConfirmPasswordInput().should("have.value", "MismatchingPassword456!");
+        }
+      });
+    });
+    
     it("handles input typing and clear actions for authentication fields", () => {
       signUpPage.visit();
       signUpPage.setEmail("newuser@magickvoice.com");

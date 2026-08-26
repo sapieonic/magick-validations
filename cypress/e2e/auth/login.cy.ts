@@ -30,6 +30,8 @@ describe("MagickVoice Authentication — Login Page UI Components & Rendering", 
 
     it("enforces proper input field attributes and password masking", () => {
       loginPage.visit();
+      loginPage.getEmailInput().should("have.attr", "type").and("match", /email|text/);
+      loginPage.getPasswordInput().should("have.attr", "type", "password");
     });
 
     it("renders the Google Social Sign-In button with appropriate text and state", () => {
