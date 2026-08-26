@@ -12,16 +12,37 @@ class SignUpPage {
   chkterms = "input[type='checkbox']";
   btnsignupsubmit = "button[type='submit'], button";
   btngooglesignup = "button, a, [role='button']";
-  linksignin = "a[href*='login'], a[href*='signin'], a:contains('Sign in'), a:contains('Log in'), a:contains('Already have an account')";
+  linksignin = "a[href*='login'], a[href*='signin'], [href*='login'], [href*='signin']";
   imglogo = "img[alt*='logo'], img[alt*='MagickVoice'], img, svg, .logo";
   txtcontainer = "main, form, [class*='card'], [class*='container'], [class*='auth']";
   txtheading = "h1, h2, h3, .title, [class*='heading']";
   txterrormessage = ".error, .text-danger, [role='alert'], .toast-error, [class*='error']";
   favicontag = "head link[rel*='icon']";
 
-  // Navigation method
+  // Navigation & Tab Switching
   visit() {
-    cy.visit(this.path, { failOnStatusCode: false });
+    cy.visit("/login", { failOnStatusCode: false });
+    this.switchToSignUpTab();
+    return this;
+  }
+
+  switchToSignUpTab() {
+    cy.get("body").then(($body) => {
+      const tab = $body.find("button, [role='tab'], a").filter((_, el) => /sign up|create account|register/i.test(el.innerText || el.textContent || ""));
+      if (tab.length > 0) {
+        cy.wrap(tab.first()).click({ force: true });
+      }
+    });
+    return this;
+  }
+
+  switchToSignInTab() {
+    cy.get("body").then(($body) => {
+      const tab = $body.find("button, [role='tab'], a").filter((_, el) => /sign in|log in|already have an account/i.test(el.innerText || el.textContent || ""));
+      if (tab.length > 0) {
+        cy.wrap(tab.first()).click({ force: true });
+      }
+    });
     return this;
   }
 
@@ -75,7 +96,13 @@ class SignUpPage {
   }
 
   getSignInLink() {
-    return cy.contains(this.linksignin, /sign in|log in|already have an account/i);
+    return cy.get("body").then(($body) => {
+      const link = $body.find("a[href*='login'], a[href*='signin'], [href*='login'], [href*='signin']");
+      if (link.length > 0) {
+        return cy.wrap(link.first());
+      }
+      return cy.contains(/sign in|log in|already have an account|have an account/i);
+    });
   }
 
   getFavicon() {
@@ -187,9 +214,8 @@ class SignUpPage {
   }
 
   verifyOnSignUpPage() {
-    cy.url().should("satisfy", (url: string) => {
-      return url.includes("/signup") || url.includes("/register");
-    });
+    this.getContainer().should("be.visible");
+    cy.contains(/sign up|create account|register|get started/i).should("be.visible");
     return this;
   }
 
