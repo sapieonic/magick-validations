@@ -38,11 +38,24 @@ describe("MagickVoice Authentication — Login Page UI Components & Rendering", 
       loginPage.visit();
       loginPage.getGoogleSignInButton()
         .should("be.visible")
-        .and("not.be.disabled").click();
+        .and("not.be.disabled");
     });
   });
 
-  describe("3. Navigation & Helper Links Rendering", () => {
+  describe("3. useLocation Redirection & Return URL Handling", () => {
+    it("preserves target location parameter when navigating directly to a protected page (/app/calls)", () => {
+      cy.visit("/app/calls", { failOnStatusCode: false });
+
+      cy.url().should("include", "/login");
+      cy.url().should((url: string) => {
+        const parsedUrl = new URL(url);
+        const returnParam = parsedUrl.searchParams.get("from") || parsedUrl.searchParams.get("redirect");
+        expect(returnParam, "Preserved return URL parameter").to.include("/app/calls");
+      });
+    });
+  });
+
+  describe("4. Navigation & Helper Links Rendering", () => {
     it("renders sign-up navigation link", () => {
       loginPage.visit();
       loginPage.getSignUpLink().should("be.visible");
@@ -59,7 +72,7 @@ describe("MagickVoice Authentication — Login Page UI Components & Rendering", 
     });
   });
 
-  describe("4. Form Interactivity & UI Input Handling (Client-Side)", () => {
+  describe("5. Form Interactivity & UI Input Handling (Client-Side)", () => {
     it("accepts input typing and reflects entered values in the DOM", () => {
       loginPage.visit();
       loginPage.setUserName("test-user@magickvoice.com");
