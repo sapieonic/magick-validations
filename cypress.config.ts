@@ -13,8 +13,6 @@ export default defineConfig({
 
   env: {
     APP_BASE_URL: process.env.MV_APP_BASE_URL || "https://staging.app.magickvoice.com",
-    API_BASE_URL: process.env.MV_API_BASE_URL || "https://staging.appi.magickvoice.com",
-    FIREBASE_API_KEY: process.env.MV_FIREBASE_API_KEY || "",
     MV_TEST_EMAIL: process.env.MV_TEST_EMAIL || "",
     MV_TEST_PASSWORD: process.env.MV_TEST_PASSWORD || "",
   },

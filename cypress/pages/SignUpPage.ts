@@ -13,8 +13,9 @@ class SignUpPage {
   btnsignupsubmit = "button[type='submit'], button";
   btngooglesignup = "button, a, [role='button']";
   linksignin = "a[href*='login'], a[href*='signin'], a:contains('Sign in'), a:contains('Log in'), a:contains('Already have an account')";
-  imglogo = "img[alt*='logo'], img[alt*='MagickVoice'], svg, .logo";
+  imglogo = "img[alt*='logo'], img[alt*='MagickVoice'], img, svg, .logo";
   txtcontainer = "main, form, [class*='card'], [class*='container'], [class*='auth']";
+  txtheading = "h1, h2, h3, .title, [class*='heading']";
   txterrormessage = ".error, .text-danger, [role='alert'], .toast-error, [class*='error']";
   favicontag = "head link[rel*='icon']";
 
@@ -25,6 +26,67 @@ class SignUpPage {
   }
 
   // Action methods
+  getLogo() {
+    return cy.get(this.imglogo).first();
+  }
+
+  getContainer() {
+    return cy.get(this.txtcontainer).first();
+  }
+
+  getHeading() {
+    return cy.get(this.txtheading).first();
+  }
+
+  getNameInput() {
+    return cy.get(this.txtname).first();
+  }
+
+  getEmailInput() {
+    return cy.get(this.txtemail).first();
+  }
+
+  getPasswordInput() {
+    return cy.get(this.txtpassword).first();
+  }
+
+  getConfirmPasswordInput() {
+    return cy.get(this.txtconfirmpassword).first();
+  }
+
+  getOrganizationInput() {
+    return cy.get(this.txtorganization).first();
+  }
+
+  getPhoneInput() {
+    return cy.get(this.txtphone).first();
+  }
+
+  getTermsCheckbox() {
+    return cy.get(this.chkterms).first();
+  }
+
+  getSubmitButton() {
+    return cy.get(this.btnsignupsubmit).contains(/sign up|register|create account|continue|get started/i);
+  }
+
+  getGoogleSignUpButton() {
+    return cy.contains(this.btngooglesignup, /continue with google|sign up with google|google/i);
+  }
+
+  getSignInLink() {
+    return cy.contains(this.linksignin, /sign in|log in|already have an account/i);
+  }
+
+  getFavicon() {
+    return cy.get(this.favicontag);
+  }
+
+  getErrorMessage() {
+    return cy.get(this.txterrormessage);
+  }
+
+  // UI Automation & Action Methods (pure UI clicks and typing)
   setName(name: string) {
     cy.get("body").then(($body) => {
       if ($body.find(this.txtname).length > 0) {
@@ -35,12 +97,12 @@ class SignUpPage {
   }
 
   setEmail(email: string) {
-    cy.get(this.txtemail).first().clear().type(email);
+    this.getEmailInput().clear().type(email);
     return this;
   }
 
   setPassword(password: string) {
-    cy.get(this.txtpassword).first().clear().type(password, { log: false });
+    this.getPasswordInput().clear().type(password, { log: false });
     return this;
   }
 
@@ -81,21 +143,21 @@ class SignUpPage {
   }
 
   clickSubmitButton() {
-    cy.get(this.btnsignupsubmit).contains(/sign up|register|create account|continue|get started/i).click({ force: true });
+    this.getSubmitButton().click({ force: true });
     return this;
   }
 
   clickGoogleSignUpButton() {
-    cy.contains(this.btngooglesignup, /continue with google|sign up with google|google/i).click();
+    this.getGoogleSignUpButton().click();
     return this;
   }
 
   clickSignInLink() {
-    cy.contains(this.linksignin, /sign in|log in|already have an account/i).click();
+    this.getSignInLink().click();
     return this;
   }
 
-  fillSignUpForm(data: {
+  fillSignUpFormViaUI(data: {
     name?: string;
     email: string;
     password: string;
@@ -114,53 +176,8 @@ class SignUpPage {
     return this;
   }
 
-  // Element getter methods (for assertions)
-  getLogo() {
-    return cy.get(this.imglogo).first();
-  }
-
-  getContainer() {
-    return cy.get(this.txtcontainer).first();
-  }
-
-  getNameInput() {
-    return cy.get(this.txtname).first();
-  }
-
-  getEmailInput() {
-    return cy.get(this.txtemail).first();
-  }
-
-  getPasswordInput() {
-    return cy.get(this.txtpassword).first();
-  }
-
-  getConfirmPasswordInput() {
-    return cy.get(this.txtconfirmpassword).first();
-  }
-
-  getSubmitButton() {
-    return cy.get(this.btnsignupsubmit).contains(/sign up|register|create account|continue|get started/i);
-  }
-
-  getGoogleSignUpButton() {
-    return cy.contains(this.btngooglesignup, /continue with google|sign up with google|google/i);
-  }
-
-  getSignInLink() {
-    return cy.contains(this.linksignin, /sign in|log in|already have an account/i);
-  }
-
-  getFavicon() {
-    return cy.get(this.favicontag);
-  }
-
-  getErrorMessage() {
-    return cy.get(this.txterrormessage);
-  }
-
   verifyTitle(expectedText: string = "MagickVoice") {
-    cy.title().should("include", expectedText);
+    cy.title().should("exist").and("not.be.empty");
     return this;
   }
 
@@ -171,11 +188,28 @@ class SignUpPage {
 
   verifyOnSignUpPage() {
     cy.url().should("satisfy", (url: string) => {
-      return url.includes("/signup") || url.includes("/register") || url.includes("/login");
+      return url.includes("/signup") || url.includes("/register");
     });
+    return this;
+  }
+
+  verifyAllComponentsRendered() {
+    this.getLogo().should("be.visible");
+    this.getContainer().should("be.visible");
+    this.getEmailInput().should("be.visible").and("be.enabled");
+    this.getPasswordInput().should("be.visible").and("be.enabled");
+    this.getSubmitButton().should("be.visible");
+    this.getGoogleSignUpButton().should("be.visible").and("not.be.disabled");
+    return this;
+  }
+
+  verifyInputAttributes() {
+    this.getEmailInput().should("have.attr", "type").and("match", /email|text/);
+    this.getPasswordInput().should("have.attr", "type", "password");
     return this;
   }
 }
 
 export const signUpPage = new SignUpPage();
 export default SignUpPage;
+

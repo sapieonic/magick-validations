@@ -3,7 +3,7 @@ version: 2.1
 executors:
   cypress-node:
     docker:
-      - image: cypress/browsers:node-20.14.0-chrome-125.0.6422.141-1-ff-126.0-edge-125.0.2535.85-1
+      - image: cypress/browsers:node-24.0.0-chrome-136.0.7103.92-1-ff-138.0.1-edge-136.0.3240.50-1
     working_directory: ~/magickvoice-validations
 
 jobs:
@@ -30,7 +30,7 @@ jobs:
 
       - run:
           name: Run Cypress Auth and Page Validations
-          command: npm run cy:run
+          command: npm run cy:run -- --reporter junit --reporter-options "mochaFile=cypress/results/results-[hash].xml,toConsole=true"
 
       - store_artifacts:
           path: cypress/screenshots
