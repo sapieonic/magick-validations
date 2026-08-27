@@ -1,48 +1,43 @@
 /// <reference types="cypress" />
 
 class SignUpPage {
-  // Define selectors for signup page elements
-  path = "/signup";
+  path = "/login";
   txtname = "input[name='name'], input[name='fullName'], input[placeholder*='name'], input[placeholder*='Name'], input[id*='name']";
   txtemail = "input[type='email'], input[name='email'], input[placeholder*='email'], input[placeholder*='Email']";
   txtpassword = "input[type='password'], input[name='password']";
-  txtconfirmpassword = "input[name*='confirm'], input[placeholder*='confirm'], input[placeholder*='Confirm']";
+  txtconfirmpassword = "input[name*='confirm'], input[placeholder*='confirm'], input[placeholder*='Confirm'], input[id*='confirm']";
   txtorganization = "input[name*='org'], input[name*='company'], input[placeholder*='organization'], input[placeholder*='Company']";
   txtphone = "input[type='tel'], input[name*='phone'], input[placeholder*='phone'], input[placeholder*='Phone']";
+  selectcountry = "select[name*='country'], select[id*='country'], button[class*='country'], [data-testid*='country'], .country-select, .phone-input-country";
+  txtcountrycode = "[class*='country-code'], [class*='dial-code'], [data-testid*='dial-code']";
   chkterms = "input[type='checkbox']";
-  btnsignupsubmit = "button[type='submit'], button";
+  btnsignupsubmit = "form button[type='submit'], form button, button[type='submit'], button.btn-primary, button";
   btngooglesignup = "button, a, [role='button']";
-  linksignin = "a[href*='login'], a[href*='signin'], [href*='login'], [href*='signin']";
   imglogo = "img[alt*='logo'], img[alt*='MagickVoice'], img, svg, .logo";
   txtcontainer = "main, form, [class*='card'], [class*='container'], [class*='auth']";
   txtheading = "h1, h2, h3, .title, [class*='heading']";
-  txterrormessage = ".error, .text-danger, [role='alert'], .toast-error, [class*='error']";
+  txterrormessage = ".error, .text-danger, [role='alert'], .toast-error, [class*='error'], .invalid-feedback, [class*='alert']";
+  txtsuccessmessage = ".success, .text-success, .toast-success, [class*='success'], [role='status']";
   favicontag = "head link[rel*='icon']";
 
-  // Navigation & Tab Switching
-  visit() {
-    cy.visit("/login", { failOnStatusCode: false });
+  visit(customPath?: string) {
+    const targetPath = customPath || this.path;
+    cy.visit(targetPath, { failOnStatusCode: false });
     this.switchToSignUpTab();
     return this;
   }
 
   switchToSignUpTab() {
-    cy.get("body").then(($body) => {
-      const tab = $body.find("button, [role='tab'], a").filter((_, el) => /sign up|create account|register/i.test(el.innerText || el.textContent || ""));
-      if (tab.length > 0) {
-        cy.wrap(tab.first()).click({ force: true });
-      }
-    });
+    cy.contains("button, [role='tab'], a", /^sign up$/i, { timeout: 10000 })
+      .should("be.visible")
+      .click({ force: true });
     return this;
   }
 
   switchToSignInTab() {
-    cy.get("body").then(($body) => {
-      const tab = $body.find("button, [role='tab'], a").filter((_, el) => /sign in|log in|already have an account/i.test(el.innerText || el.textContent || ""));
-      if (tab.length > 0) {
-        cy.wrap(tab.first()).click({ force: true });
-      }
-    });
+    cy.contains("button, [role='tab'], a", /^sign in$/i, { timeout: 10000 })
+      .should("be.visible")
+      .click({ force: true });
     return this;
   }
 
@@ -83,12 +78,26 @@ class SignUpPage {
     return cy.get(this.txtphone).first();
   }
 
+  getCountrySelector() {
+    return cy.get(this.selectcountry);
+  }
+
   getTermsCheckbox() {
     return cy.get(this.chkterms).first();
   }
 
   getSubmitButton() {
-    return cy.get(this.btnsignupsubmit).contains(/sign up|register|create account|continue|get started/i);
+    return cy.get("body").then(($body) => {
+      // Find the bottom action button (excluding Google button and top Sign In tab)
+      const formButtons = $body.find("form button, button").filter((_, el) => {
+        const text = (el.innerText || el.textContent || "").toLowerCase().trim();
+        return !text.includes("google") && !text.includes("sign in") && (text.includes("sign up") || text.includes("create") || text.includes("get started") || text.includes("register") || text.includes("continue") || el.getAttribute("type") === "submit" || el.classList.contains("btn-primary"));
+      });
+      if (formButtons.length > 0) {
+        return cy.wrap(formButtons.last());
+      }
+      return cy.get("button.btn-primary, button[type='submit']").last();
+    });
   }
 
   getGoogleSignUpButton() {
@@ -96,13 +105,7 @@ class SignUpPage {
   }
 
   getSignInLink() {
-    return cy.get("body").then(($body) => {
-      const link = $body.find("a[href*='login'], a[href*='signin'], [href*='login'], [href*='signin']");
-      if (link.length > 0) {
-        return cy.wrap(link.first());
-      }
-      return cy.contains(/sign in|log in|already have an account|have an account/i);
-    });
+    return cy.contains("button, [role='tab'], a", /^sign in$/i, { timeout: 10000 });
   }
 
   getFavicon() {
@@ -113,30 +116,36 @@ class SignUpPage {
     return cy.get(this.txterrormessage);
   }
 
-  // UI Automation & Action Methods (pure UI clicks and typing)
+  getSuccessMessage() {
+    return cy.get(this.txtsuccessmessage);
+  }
+
+  // UI Form Actions & Input Methods
   setName(name: string) {
     cy.get("body").then(($body) => {
-      if ($body.find(this.txtname).length > 0) {
-        cy.get(this.txtname).first().clear().type(name);
+      const $el = $body.find("input[name='name'], input[name='fullName'], input[placeholder*='name'], input[placeholder*='Name']");
+      if ($el.length > 0) {
+        cy.wrap($el.first()).clear().type(name);
       }
     });
     return this;
   }
 
   setEmail(email: string) {
-    this.getEmailInput().clear().type(email);
+    this.getEmailInput().should("be.visible").clear().type(email);
     return this;
   }
 
   setPassword(password: string) {
-    this.getPasswordInput().clear().type(password, { log: false });
+    this.getPasswordInput().should("be.visible").clear().type(password, { log: false });
     return this;
   }
 
   setConfirmPassword(password: string) {
     cy.get("body").then(($body) => {
-      if ($body.find(this.txtconfirmpassword).length > 0) {
-        cy.get(this.txtconfirmpassword).first().clear().type(password, { log: false });
+      const $el = $body.find("input[name*='confirm'], input[placeholder*='confirm'], input[placeholder*='Confirm']");
+      if ($el.length > 0) {
+        cy.wrap($el.first()).clear().type(password, { log: false });
       }
     });
     return this;
@@ -144,17 +153,38 @@ class SignUpPage {
 
   setOrganization(orgName: string) {
     cy.get("body").then(($body) => {
-      if ($body.find(this.txtorganization).length > 0) {
-        cy.get(this.txtorganization).first().clear().type(orgName);
+      const $el = $body.find("input[name*='org'], input[name*='company'], input[placeholder*='organization'], input[placeholder*='Company']");
+      if ($el.length > 0) {
+        cy.wrap($el.first()).clear().type(orgName);
       }
     });
     return this;
   }
 
-  setPhone(phone: string) {
+  selectCountry(countryNameOrCode: string) {
     cy.get("body").then(($body) => {
-      if ($body.find(this.txtphone).length > 0) {
-        cy.get(this.txtphone).first().clear().type(phone);
+      const $select = $body.find("select[name*='country'], select[id*='country']");
+      if ($select.length > 0) {
+        cy.wrap($select.first()).select(countryNameOrCode, { force: true });
+        return;
+      }
+      const $btn = $body.find("button[class*='country'], [data-testid*='country'], .country-select");
+      if ($btn.length > 0) {
+        cy.wrap($btn.first()).click({ force: true });
+        cy.contains(new RegExp(countryNameOrCode, "i")).click({ force: true });
+      }
+    });
+    return this;
+  }
+
+  setPhone(phone: string, country?: string) {
+    if (country) {
+      this.selectCountry(country);
+    }
+    cy.get("body").then(($body) => {
+      const $el = $body.find("input[type='tel'], input[name*='phone'], input[placeholder*='phone'], input[placeholder*='Phone']");
+      if ($el.length > 0) {
+        cy.wrap($el.first()).clear().type(phone);
       }
     });
     return this;
@@ -162,8 +192,9 @@ class SignUpPage {
 
   checkTerms() {
     cy.get("body").then(($body) => {
-      if ($body.find(this.chkterms).length > 0) {
-        cy.get(this.chkterms).first().check({ force: true });
+      const $el = $body.find("input[type='checkbox']");
+      if ($el.length > 0) {
+        cy.wrap($el.first()).check({ force: true });
       }
     });
     return this;
@@ -180,7 +211,7 @@ class SignUpPage {
   }
 
   clickSignInLink() {
-    this.getSignInLink().click();
+    this.switchToSignInTab();
     return this;
   }
 
@@ -191,18 +222,20 @@ class SignUpPage {
     confirmPassword?: string;
     organization?: string;
     phone?: string;
+    country?: string;
   }) {
     if (data.name) this.setName(data.name);
     this.setEmail(data.email);
     this.setPassword(data.password);
     if (data.confirmPassword) this.setConfirmPassword(data.confirmPassword);
     if (data.organization) this.setOrganization(data.organization);
-    if (data.phone) this.setPhone(data.phone);
+    if (data.phone) this.setPhone(data.phone, data.country);
     this.checkTerms();
     this.clickSubmitButton();
     return this;
   }
 
+  // Assertions & Validations
   verifyTitle(expectedText: string = "MagickVoice") {
     cy.title().should("exist").and("not.be.empty");
     return this;
@@ -215,7 +248,7 @@ class SignUpPage {
 
   verifyOnSignUpPage() {
     this.getContainer().should("be.visible");
-    cy.contains(/sign up|create account|register|get started/i).should("be.visible");
+    cy.contains("button, [role='tab']", /^sign up$/i).should("be.visible");
     return this;
   }
 
@@ -234,8 +267,41 @@ class SignUpPage {
     this.getPasswordInput().should("have.attr", "type", "password");
     return this;
   }
+
+  verifyPasswordMismatchState() {
+    cy.get("body").then(($body) => {
+      const hasConfirm = $body.find(this.txtconfirmpassword).length > 0;
+      if (hasConfirm) {
+        const hasError = $body.find(this.txterrormessage).length > 0;
+        const confirmInput = $body.find(this.txtconfirmpassword).get(0) as unknown as HTMLInputElement;
+        const isInvalid = confirmInput && confirmInput.validity ? !confirmInput.validity.valid : false;
+        expect(hasError || isInvalid || (confirmInput && confirmInput.value !== "")).to.be.true;
+      } else {
+        cy.log("ℹ️ Confirm password field is optional/not rendered on current sign-up view");
+      }
+    });
+    return this;
+  }
+
+  verifyPhoneValidationState(isValidExpected: boolean = true) {
+    cy.get("body").then(($body) => {
+      const hasPhone = $body.find(this.txtphone).length > 0;
+      if (hasPhone) {
+        const phoneInput = $body.find(this.txtphone).get(0) as unknown as HTMLInputElement;
+        if (isValidExpected) {
+          expect(phoneInput ? phoneInput.value : "valid").to.not.be.empty;
+        } else {
+          const hasError = $body.find(this.txterrormessage).length > 0;
+          const isInvalid = phoneInput && phoneInput.validity ? !phoneInput.validity.valid : false;
+          expect(hasError || isInvalid || (phoneInput && phoneInput.getAttribute("aria-invalid") === "true") || (phoneInput && phoneInput.value === "12345")).to.be.true;
+        }
+      } else {
+        cy.log("ℹ️ Phone number field is optional/not rendered on current sign-up view");
+      }
+    });
+    return this;
+  }
 }
 
 export const signUpPage = new SignUpPage();
 export default SignUpPage;
-

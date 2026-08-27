@@ -4,6 +4,7 @@ export default defineConfig({
   defaultCommandTimeout: 15000,
   requestTimeout: 20000,
   responseTimeout: 30000,
+  pageLoadTimeout: 60000,
   video: false,
   screenshotOnRunFailure: true,
   retries: {
