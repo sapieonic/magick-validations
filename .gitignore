@@ -69,6 +69,11 @@ web_modules/
 .env
 .env.*
 !.env.example
+cypress.env.json
+cypress.env.*.json
+cypress/downloads/
+cypress/screenshots/
+cypress/videos/*
 
 # parcel-bundler cache (https://parceljs.org/)
 .cache

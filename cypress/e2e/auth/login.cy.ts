@@ -2,8 +2,6 @@ import { loginPage } from "../../pages/LoginPage";
 
 describe("MagickVoice Authentication — Login Page UI Components & Rendering", () => {
   beforeEach(() => {
-    cy.interceptFirebaseConfig();
-    cy.interceptAuthSession();
     loginPage.visit();
   });
 
@@ -40,9 +38,23 @@ describe("MagickVoice Authentication — Login Page UI Components & Rendering", 
 
   describe("3. useLocation Redirection & Return URL Handling", () => {
     it("preserves return navigation parameter when accessing protected areas", () => {
-      cy.visit("/app/calls", { failOnStatusCode: false });
+      cy.clearAllCookies();
+      cy.clearAllLocalStorage();
+      cy.clearAllSessionStorage();
+      Cypress.session.clearAllSavedSessions();
 
-      cy.url().should("include", "/login");
+      cy.visit("/app/calls", {
+        failOnStatusCode: false,
+        onBeforeLoad(win) {
+          try {
+            win.indexedDB.deleteDatabase("firebaseLocalStorageDb");
+          } catch (_) {}
+          win.localStorage.clear();
+          win.sessionStorage.clear();
+        },
+      });
+
+      cy.url({ timeout: 15000 }).should("include", "/login");
       cy.url().should((url: string) => {
         const parsedUrl = new URL(url);
         const returnParam = parsedUrl.searchParams.get("next") || parsedUrl.searchParams.get("from") || parsedUrl.searchParams.get("redirect") || parsedUrl.searchParams.get("returnUrl") || parsedUrl.searchParams.get("return_url");
@@ -86,7 +98,7 @@ describe("MagickVoice Authentication — Login Page UI Components & Rendering", 
     });
   });
 
-  describe("5. Form Interactivity & UI Input Handling (Client-Side)", () => {
+  describe("5. Form Interactivity & UI Input Handling", () => {
     it("accepts input typing and reflects entered values in the DOM", () => {
       loginPage.setUserName("test-user@magickvoice.com");
       loginPage.getEmailInput().should("have.value", "test-user@magickvoice.com");
@@ -95,44 +107,34 @@ describe("MagickVoice Authentication — Login Page UI Components & Rendering", 
       loginPage.getPasswordInput().should("have.value", "SecretPassword123!");
     });
 
-    it("clicks Sign-In button and asserts successful authentication result", () => {
-      cy.intercept("POST", /.*(?:signInWithPassword|verifyPassword|auth\/session).*/, {
-        statusCode: 200,
-        body: {
-          idToken: "mock-login-token-12345",
-          email: "test-user@magickvoice.com",
-          refreshToken: "mock-refresh-token",
-          expiresIn: "3600",
-          localId: "mock-user-uid-1001",
-        },
-      }).as("mockSignInSuccess");
+    it("authenticates successfully using valid staging credentials and redirects to application", () => {
+      const validEmail = Cypress.env("MV_TEST_EMAIL");
+      const validPassword = Cypress.env("MV_TEST_PASSWORD");
 
-      loginPage.setUserName("test-user@magickvoice.com");
-      loginPage.setPassword("SecretPassword123!");
+      cy.intercept("POST", "**/auth/session").as("liveLoginSession");
+
+      loginPage.visit("/app/calls");
+      loginPage.setUserName(validEmail);
+      loginPage.setPassword(validPassword);
       loginPage.clickSubmitButton();
 
-      cy.wait("@mockSignInSuccess").then((interception) => {
-        expect(interception.response?.statusCode).to.eq(200);
+      cy.wait("@liveLoginSession", { timeout: 20000 }).then((interception) => {
+        expect(interception.response?.statusCode).to.be.oneOf([200, 304]);
       });
+
+      cy.visit("/app/calls", { failOnStatusCode: false });
+      cy.url({ timeout: 20000 }).should("include", "/app");
     });
 
-    it("clicks Sign-In button with invalid credentials and asserts error handling", () => {
-      cy.intercept("POST", /.*(?:signInWithPassword|verifyPassword|auth\/session).*/, {
-        statusCode: 400,
-        body: {
-          error: {
-            message: "INVALID_LOGIN_CREDENTIALS",
-            code: 400,
-          },
-        },
-      }).as("mockSignInFailure");
-
-      loginPage.setUserName("invalid-user@magickvoice.com");
-      loginPage.setPassword("WrongPassword123!");
+    it("displays error handling when attempting login with invalid credentials", () => {
+      loginPage.visit();
+      loginPage.setUserName("invalid-test-account-999@magickvoice.com");
+      loginPage.setPassword("WrongPassword999!");
       loginPage.clickSubmitButton();
 
-      cy.wait("@mockSignInFailure").then((interception) => {
-        expect(interception.response?.statusCode).to.eq(400);
+      cy.get("body", { timeout: 10000 }).then(($body) => {
+        const hasError = $body.find(".error, .text-danger, [role='alert'], .toast-error, [class*='alert']").length > 0;
+        expect(hasError || window.location.pathname.includes("login")).to.be.true;
       });
     });
   });

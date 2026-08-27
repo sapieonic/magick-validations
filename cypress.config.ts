@@ -30,6 +30,13 @@ export default defineConfig({
         },
       });
 
+      on("before:browser:launch", (browser, launchOptions) => {
+        if (browser.family === "chromium" && browser.name !== "firefox") {
+          launchOptions.args.push("--disable-gpu-shader-disk-cache");
+        }
+        return launchOptions;
+      });
+
       return config;
     },
   },

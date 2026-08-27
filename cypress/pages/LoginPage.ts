@@ -56,14 +56,14 @@ class LoginPage {
 
   getSubmitButton() {
     return cy.get("body").then(($body) => {
-      const formSubmit = $body.find("form button[type='submit'], form button, button[type='submit']").filter((_, el) => {
+      const formSubmit = $body.find("form button[type='submit'], form button.btn-primary, form button, button[type='submit']").filter((_, el) => {
         const text = (el.innerText || el.textContent || "").toLowerCase().trim();
         return !text.includes("google") && (text.includes("sign in") || text.includes("log in") || text.includes("continue") || text.includes("submit") || el.getAttribute("type") === "submit");
       });
       if (formSubmit.length > 0) {
         return cy.wrap(formSubmit.last());
       }
-      return cy.get("button").filter(":not(:contains('Google'))").contains(/sign in|log in|continue/i);
+      return cy.get("button[type='submit'], form button").last();
     });
   }
 

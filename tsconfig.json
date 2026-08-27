@@ -4,6 +4,7 @@
     "target": "ES2024",
     "lib": ["ES2024","DOM"],
     /* Modules */
+    "baseUrl": "./",
     "module": "nodenext",
     "moduleResolution": "nodenext",
     "esModuleInterop": true,

@@ -139,7 +139,8 @@ describe("MagickVoice Authentication — Sign Up Flow & Field Validations", () =
 
   describe("6. Form Submission & Result State Verification", () => {
     it("clicks Sign-Up button and verifies successful registration result", () => {
-      cy.intercept("POST", /.*(?:signUp|signupNewUser|accounts:signUp|auth\/session).*/i, {
+      // Intercept only the Firebase signup registration endpoint
+      cy.intercept("POST", "**/accounts:signUp*", {
         statusCode: 200,
         body: {
           idToken: "mock-registration-token-12345",
@@ -165,7 +166,7 @@ describe("MagickVoice Authentication — Sign Up Flow & Field Validations", () =
     });
 
     it("clicks Sign-Up button and displays error message when registration fails (e.g. user already exists)", () => {
-      cy.intercept("POST", /.*(?:signUp|signupNewUser|accounts:signUp|auth\/session).*/i, {
+      cy.intercept("POST", "**/accounts:signUp*", {
         statusCode: 400,
         body: {
           error: {
