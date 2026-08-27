@@ -237,7 +237,7 @@ class SignUpPage {
 
   // Assertions & Validations
   verifyTitle(expectedText: string = "MagickVoice") {
-    cy.title().should("exist").and("not.be.empty");
+    cy.title().should("exist").and("include", expectedText);
     return this;
   }
 
