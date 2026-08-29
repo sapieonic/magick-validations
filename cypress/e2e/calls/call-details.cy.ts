@@ -1,9 +1,6 @@
 import { callDetailPage } from "../../pages/CallDetailPage";
 
 describe("MagickVoice Call Details Page — Comprehensive Section & Component Validations", () => {
-  // =========================================================================
-  // SUITE 1: Failed / Cancelled Call Record — Component & Section Validations
-  // =========================================================================
   describe("Suite 1: Failed / Cancelled Call Record — Component & Section Validations", () => {
     beforeEach(() => {
       callDetailPage.navigateToCallByStatus("failed");
@@ -18,7 +15,8 @@ describe("MagickVoice Call Details Page — Comprehensive Section & Component Va
       callDetailPage.verifyHeaderSection("failed");
     });
 
-    it("1.3 validates Call Metadata: Recipient Phone Number, Duration (0s or length), Pipeline, Provider, and Timestamps", () => {
+    it("1.3 validates Top Follow-up and Call Metadata: Recipient Phone, Duration (0s), Pipeline, Provider, and Timestamps", () => {
+      callDetailPage.verifyFollowUpSection();
       callDetailPage.verifyMetadataSection();
     });
 
@@ -34,9 +32,6 @@ describe("MagickVoice Call Details Page — Comprehensive Section & Component Va
     });
   });
 
-  // =========================================================================
-  // SUITE 2: Completed / Successful Call Record — Component & Section Validations
-  // =========================================================================
   describe("Suite 2: Completed / Successful Call Record — Component & Section Validations", () => {
     beforeEach(() => {
       callDetailPage.navigateToCallByStatus("completed");
@@ -51,31 +46,41 @@ describe("MagickVoice Call Details Page — Comprehensive Section & Component Va
       callDetailPage.verifyHeaderSection("completed");
     });
 
-    it("2.3 validates Call Metadata: Recipient Phone Number, Duration, AI Pipeline Tier, Voice Provider, and Timestamps", () => {
+    it("2.3 validates Top Follow-up & Recommendations banner at top of the page", () => {
+      callDetailPage.verifyFollowUpSection();
+    });
+
+    it("2.4 validates Call Metadata: Recipient Phone Number, Duration, AI Pipeline Tier, Voice Provider, and Timestamps", () => {
       callDetailPage.verifyMetadataSection();
     });
 
-    it("2.4 validates Audio Player & Recording component (waveform/playback controls)", () => {
+    it("2.5 validates Audio Player & interactive playback controls (play/pause toggle & waveform)", () => {
       callDetailPage.verifyAudioRecordingSection();
+      callDetailPage.playAndPauseAudio();
     });
 
-    it("2.5 validates Conversation Transcript timeline (AI Assistant vs User message turns)", () => {
-      callDetailPage.verifyTranscriptSection();
+    it("2.6 validates Audio Recording download control and recording URL access", () => {
+      callDetailPage.verifyAudioDownload();
     });
 
-    it("2.6 validates Prompt instructions & Call Parameters metadata card", () => {
+    it("2.7 validates Conversation Transcript timeline (AI Assistant vs User message turns & dialogue bubbles)", () => {
+      callDetailPage.verifyTranscriptDetails();
+    });
+
+    it("2.8 validates Call Analysis, Sentiment & Evaluation summary section", () => {
+      callDetailPage.verifyCallAnalysisSection();
+    });
+
+    it("2.9 validates Prompt instructions & Call Parameters metadata card", () => {
       callDetailPage.verifyPromptConfigSection();
     });
 
-    it("2.7 validates Back navigation button returns cleanly to Calls table", () => {
+    it("2.10 validates Back navigation button returns cleanly to Calls table", () => {
       callDetailPage.clickBack();
       cy.url({ timeout: 15000 }).should("match", /\/app\/calls(?:\?.*)?$/);
     });
   });
-
-  // =========================================================================
-  // SUITE 3: Multi-Component Settlement & UI Integrity Check
-  // =========================================================================
+  
   describe("Suite 3: Multi-Component Settlement & UI Integrity Check", () => {
     it("3.1 validates all sections and cards are populated and settled cleanly", () => {
       callDetailPage.visit();

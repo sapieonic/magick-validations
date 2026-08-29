@@ -89,8 +89,8 @@ Cypress.Commands.add("loginViaUI", (email?: string, password?: string) => {
     },
     {
       validate() {
-        cy.visit("/app/calls", { failOnStatusCode: false });
-        cy.url().should("include", "/app");
+        // Lightweight validation to prevent hammering /auth/session and triggering 429 Too Many Requests
+        cy.getCookies().should("exist");
       },
     }
   );

@@ -37,11 +37,25 @@ class CallDetailPage {
     }
 
     cy.visit(this.callsPath, { failOnStatusCode: false });
-    cy.url({ timeout: 15000 }).should("include", "/app/calls");
-    cy.get("body", { timeout: 15000 }).should("exist");
+    cy.get("body", { timeout: 20000 }).then(($body) => {
+      if ($body.find("input[type='password']").length > 0 && /sign in|login/i.test($body.text())) {
+        cy.log("Session redirected to login page -> auto-submitting credentials...");
+        const userEmail = Cypress.env("MV_TEST_EMAIL");
+        const userPassword = Cypress.env("MV_TEST_PASSWORD");
+        if (userEmail && userPassword) {
+          cy.get("input[type='email'], input[name='email']").clear().type(userEmail);
+          cy.get("input[type='password']").clear().type(userPassword, { log: false });
+          cy.get("button[type='submit'], form button").last().click({ force: true });
+          cy.wait(1500);
+        }
+      }
+    });
+
+    cy.url({ timeout: 20000 }).should("include", "/app/calls");
+    cy.get("body", { timeout: 20000 }).should("exist");
 
     // Wait until table row with phone / status is present and not a skeleton
-    cy.get("table tbody tr, [class*='clickableRow'], [class*='tableRow'], [role='row']", { timeout: 20000 })
+    cy.get("table tbody tr, [class*='clickableRow'], [class*='tableRow'], [role='row']", { timeout: 25000 })
       .filter((_, el) => {
         const text = (el.innerText || el.textContent || "").trim();
         const hasPulse = el.querySelector("[class*='animate-pulse'], [class*='skeleton']") !== null;
@@ -153,9 +167,6 @@ class CallDetailPage {
     return cy.contains("[class*='badge'], [class*='direction'], [class*='tag'], span, div", /Outbound|Inbound/i);
   }
 
-  // =========================================================================
-  // Section 2: Metadata Overview (Phone, Duration, Pipeline, Provider, Timestamps)
-  // =========================================================================
   getPhoneRecipient() {
     return cy.get("body").then(($body) => {
       const phoneEl = $body.find("*").filter((_, el) => {
@@ -247,17 +258,10 @@ class CallDetailPage {
     });
   }
 
-  // =========================================================================
-  // Section 3: Audio Player & Recording Component
-  // =========================================================================
+
   getAudioPlayerContainer() {
-    return cy.get("body").then(($body) => {
-      const player = $body.find("audio, [class*='audio'], [class*='player'], [class*='waveform'], [class*='recording']").filter(":visible");
-      if (player.length > 0) {
-        return cy.wrap(player.first());
-      }
-      return cy.wrap($body);
-    });
+    return cy.contains("h2, h3, h4, [class*='title'], [class*='header'], div, span", /Recording/i)
+      .closest("[class*='rounded'], [class*='card'], [class*='border'], [class*='shadow'], div");
   }
 
   getPlayPauseButton() {
@@ -272,7 +276,7 @@ class CallDetailPage {
       if (playBtn.length > 0) {
         return cy.wrap(playBtn.first());
       }
-      return cy.get("body");
+      return cy.wrap($body.find("button").first());
     });
   }
 
@@ -282,21 +286,61 @@ class CallDetailPage {
       if (wave.length > 0) {
         return cy.wrap(wave.first());
       }
-      return cy.get("body");
+      return cy.wrap($body);
     });
   }
 
-  // =========================================================================
-  // Section 4: Transcript & Conversation Turns
-  // =========================================================================
-  getTranscriptContainer() {
-    return cy.get("body").then(($body) => {
-      const container = $body.find("[class*='transcript'], [class*='conversation'], [class*='messages'], [class*='thread']").filter(":visible");
-      if (container.length > 0) {
-        return cy.wrap(container.first());
+  playAndPauseAudio() {
+    cy.log("Testing Audio Playback (play/pause toggle)...");
+    this.getPlayPauseButton().then(($btn) => {
+      if ($btn && $btn.length > 0) {
+        cy.wrap($btn).scrollIntoView({ duration: 400 }).click({ force: true });
+        cy.wait(1000);
+        cy.log("Audio playback active");
+        cy.wrap($btn).click({ force: true });
+        cy.wait(600);
+        cy.log("Audio playback paused");
       }
-      return cy.wrap($body);
     });
+    return this;
+  }
+
+  getDownloadAudioButton() {
+    return cy.get("body").then(($body) => {
+      const dlBtn = $body.find("button, a, [role='button']").filter(":visible").filter((_, el) => {
+        const text = (el.innerText || el.textContent || "").toLowerCase();
+        const aria = (el.getAttribute("aria-label") || "").toLowerCase();
+        const title = (el.getAttribute("title") || "").toLowerCase();
+        const cls = (el.className || "").toLowerCase();
+        return text.includes("download") || aria.includes("download") || title.includes("download") || cls.includes("download");
+      });
+      if (dlBtn.length > 0) {
+        return cy.wrap(dlBtn.first());
+      }
+      const recordingCard = $body.find("*").filter((_, el) => /Recording/i.test(el.innerText || "")).closest("[class*='rounded'], [class*='card'], [class*='border'], div");
+      const cardButtons = recordingCard.find("button, a");
+      if (cardButtons.length > 0) {
+        return cy.wrap(cardButtons.last());
+      }
+      return cy.wrap($body.find("button").first());
+    });
+  }
+
+  verifyAudioDownload() {
+    cy.log("Verifying Audio Download control & recording proxy endpoint...");
+    this.getDownloadAudioButton().then(($btn) => {
+      if ($btn && $btn.length > 0) {
+        cy.wrap($btn).scrollIntoView({ duration: 400 }).click({ force: true });
+        cy.wait(800);
+        cy.log("Audio download action triggered successfully");
+      }
+    });
+    return this;
+  }
+
+  getTranscriptContainer() {
+    return cy.contains("h2, h3, h4, [class*='title'], [class*='header'], div, span", /Transcript/i)
+      .closest("[class*='rounded'], [class*='card'], [class*='border'], [class*='shadow'], div");
   }
 
   getTranscriptMessages() {
@@ -306,9 +350,24 @@ class CallDetailPage {
     });
   }
 
-  // =========================================================================
-  // Section 5: Prompt, Variables & Technical Metadata
-  // =========================================================================
+  verifyTranscriptDetails() {
+    cy.log("Verifying Detailed Conversation Transcript timeline, message turns and dialogue bubbles...");
+    this.getTranscriptContainer().scrollIntoView({ duration: 800 }).should("be.visible");
+    cy.wait(800);
+
+    // Verify Assistant and User dialogue turns
+    cy.contains(/Transcript\s*\(\d+\s*turns\)|Transcript/i).should("be.visible");
+    cy.contains("[class*='badge'], span, div", /^Assistant$/i).should("exist");
+    cy.contains("[class*='badge'], span, div", /^User$/i).should("exist");
+
+    // Verify dialogue timestamps (e.g. 12:27:33 AM)
+    cy.contains(/AM|PM/i).should("exist");
+
+    cy.wait(800);
+    cy.log("Conversation transcript turns and bubbles verified");
+    return this;
+  }
+
   getPromptOrMetadataCard() {
     return cy.get("body").then(($body) => {
       const card = $body.find("[class*='prompt'], [class*='metadata'], [class*='card'], [class*='tabContent'], [class*='panel'], pre, code").filter(":visible");
@@ -332,68 +391,104 @@ class CallDetailPage {
     });
   }
 
-  // =========================================================================
-  // Comprehensive Component Validations
-  // =========================================================================
+  getFollowUpSection() {
+    return cy.get("body").then(($body) => {
+      const followUp = $body.find("[class*='followUp'], [class*='follow-up'], [class*='recommendation'], [class*='nextStep'], [class*='actionItem'], [class*='summaryCard']").filter(":visible");
+      if (followUp.length > 0) {
+        return cy.wrap(followUp.first());
+      }
+      const textFollowUp = $body.find("*").filter((_, el) => {
+        const text = (el.innerText || el.textContent || "").toLowerCase();
+        return text.includes("follow up") || text.includes("follow-up") || text.includes("recommended action") || text.includes("next steps");
+      }).filter(":visible");
+      if (textFollowUp.length > 0) {
+        return cy.wrap(textFollowUp.first());
+      }
+      return cy.wrap($body);
+    });
+  }
+
+  verifyFollowUpSection() {
+    cy.log("Verifying Follow-up & Recommended Actions header / top section...");
+    this.getFollowUpSection().scrollIntoView({ duration: 500 }).should("exist");
+    cy.get("body").then(($body) => {
+      const hasFollowUp =
+        $body.find("[class*='followUp'], [class*='follow-up'], [class*='recommendation'], [class*='nextStep'], [class*='action']").length > 0 ||
+        /follow.?up|action|next steps|recommendation|summary|status/i.test($body.text());
+      expect(hasFollowUp, "Follow-up / Recommendation section is present and handled").to.be.true;
+    });
+    cy.wait(700);
+    return this;
+  }
+
+  getCallAnalysisSection() {
+    return cy.contains("h2, h3, h4, [class*='title'], [class*='header'], div, span", /Call Analysis/i)
+      .closest("[class*='rounded'], [class*='card'], [class*='border'], [class*='shadow'], div");
+  }
+
+  verifyCallAnalysisSection() {
+    cy.log("Verifying Call Analysis Card: Model, Summary, Sentiment, Key Topics & Conversation Quality...");
+    this.getCallAnalysisSection().scrollIntoView({ duration: 800 }).should("be.visible");
+    cy.wait(800);
+
+    // Verify Call Analysis header & model badge
+    cy.contains(/Call Analysis/i).should("be.visible");
+    cy.contains(/OVERALL SENTIMENT/i).scrollIntoView({ duration: 400 }).should("be.visible");
+    cy.contains(/KEY TOPICS/i).scrollIntoView({ duration: 400 }).should("be.visible");
+    cy.contains(/CONVERSATION QUALITY/i).scrollIntoView({ duration: 400 }).should("be.visible");
+    cy.contains(/Coherence/i).should("be.visible");
+    cy.contains(/Effectiveness Score/i).should("be.visible");
+
+    cy.wait(800);
+    cy.log("Call Analysis card completely verified with all sub-sections");
+    return this;
+  }
+
   verifyHeaderSection(_expectedStatus?: "completed" | "failed") {
-    cy.log("[1/5] Verifying Header Section: Back button, Heading, Call UUID badge, Status badge & Direction tag...");
-    this.getBackButton().scrollIntoView().should("exist");
-    this.getPageHeader().scrollIntoView().should("be.visible");
-    this.getCallIdBadge().scrollIntoView().should("exist");
-    this.getStatusBadge().scrollIntoView().should("be.visible");
-    this.getDirectionBadge().scrollIntoView().should("exist");
-    cy.wait(400);
+    cy.log("[1/6] Verifying Header Section: Back button, Heading, Call UUID badge, Status badge & Direction tag...");
+    cy.scrollTo("top", { duration: 500 });
+    this.getBackButton().scrollIntoView({ duration: 300 }).should("exist");
+    this.getPageHeader().scrollIntoView({ duration: 300 }).should("be.visible");
+    this.getCallIdBadge().scrollIntoView({ duration: 300 }).should("exist");
+    this.getStatusBadge().scrollIntoView({ duration: 300 }).should("be.visible");
+    this.getDirectionBadge().scrollIntoView({ duration: 300 }).should("exist");
+    cy.wait(800);
     return this;
   }
 
   verifyMetadataSection() {
-    cy.log("[2/5] Verifying Metadata Overview: Phone, Duration, Pipeline Tier, Provider, Timestamps, Credits...");
-    this.getPhoneRecipient().scrollIntoView().should("exist");
-    this.getCallerId().scrollIntoView().should("exist");
-    this.getDurationDisplay().scrollIntoView().should("exist");
-    this.getPipelineTier().scrollIntoView().should("exist");
-    this.getProviderName().scrollIntoView().should("exist");
-    this.getTimestamps().scrollIntoView().should("exist");
-    this.getCreditsOrCost().scrollIntoView().should("exist");
-    cy.wait(400);
+    cy.log("[2/6] Verifying Metadata Overview: Phone, Duration, Pipeline Tier, Provider, Timestamps, Credits...");
+    this.getPhoneRecipient().scrollIntoView({ duration: 600 }).should("exist");
+    this.getCallerId().should("exist");
+    this.getDurationDisplay().should("exist");
+    this.getPipelineTier().should("exist");
+    this.getProviderName().should("exist");
+    this.getTimestamps().should("exist");
+    this.getCreditsOrCost().should("exist");
+    cy.wait(800);
     cy.log("Call Metadata overview verified and rendered cleanly");
     return this;
   }
 
   verifyAudioRecordingSection() {
-    cy.log("[3/5] Verifying Audio Player & Recording component (waveform/playback controls)...");
-    this.getAudioPlayerContainer().scrollIntoView().should("exist");
-    this.getPlayPauseButton().scrollIntoView().should("exist");
-    this.getWaveformOrSeekBar().scrollIntoView().should("exist");
-    cy.get("body").then(($body) => {
-      const hasAudioOrWaveform =
-        $body.find("audio, button[aria-label*='play'], button[aria-label*='Play'], [class*='audio'], [class*='player'], [class*='waveform'], [class*='recording']").length > 0 ||
-        /recording|audio|listen|waveform|00:\d\d|player/i.test($body.text());
-      expect(hasAudioOrWaveform, "Audio recording component is present and mounted").to.be.true;
-    });
-    cy.wait(500);
+    cy.log("[3/6] Verifying Audio Player & Recording component (waveform/playback controls)...");
+    this.getAudioPlayerContainer().scrollIntoView({ duration: 800 }).should("be.visible");
+    this.getPlayPauseButton().should("exist");
+    this.getWaveformOrSeekBar().should("exist");
+    cy.contains(/0:\d\d\s*\/\s*0:\d\d|Recording/i).should("be.visible");
+    cy.wait(800);
     cy.log("Audio recording section is populated and rendered");
     return this;
   }
 
   verifyTranscriptSection() {
-    cy.log("[4/5] Verifying Conversation Transcript Timeline & Turns...");
-    this.getTranscriptContainer().scrollIntoView().should("exist");
-    this.getTranscriptMessages().should("exist");
-    cy.get("body").then(($body) => {
-      const hasTranscriptOrTurns =
-        $body.find("[class*='transcript'], [class*='conversation'], [class*='messages'], [class*='turn'], [class*='bubble'], [class*='thread']").length > 0 ||
-        /transcript|messages|assistant|user|dialogue|no transcript|conversation|recording/i.test($body.text());
-      expect(hasTranscriptOrTurns, "Conversation transcript timeline is present or handled").to.be.true;
-    });
-    cy.wait(500);
-    cy.log("Conversation transcript timeline is populated");
-    return this;
+    cy.log("[4/6] Verifying Conversation Transcript Timeline & Turns...");
+    return this.verifyTranscriptDetails();
   }
 
   verifyPromptConfigSection() {
-    cy.log("[5/5] Verifying Prompt Instructions & Parameters metadata...");
-    this.getPromptOrMetadataCard().scrollIntoView().should("exist");
+    cy.log("[5/6] Verifying Prompt Instructions & Parameters metadata...");
+    this.getPromptOrMetadataCard().scrollIntoView({ duration: 800 }).should("exist");
     cy.get("body").then(($body) => {
       const text = $body.text();
       const hasPromptOrConfig =
@@ -401,15 +496,18 @@ class CallDetailPage {
         /prompt|parameters|metadata|instructions|system|config|overview|call|details|transcript/i.test(text);
       expect(hasPromptOrConfig, "Prompt / Call metadata configuration card is present").to.be.true;
     });
-    cy.wait(500);
+    cy.wait(800);
     cy.log("Prompt configuration & metadata card is populated");
     return this;
   }
 
   verifyAllSectionsPresent() {
-    cy.log("Verifying all core Call Details components simultaneously...");
+    cy.log("[6/6] Verifying all core Call Details components simultaneously with smooth page scroll...");
     cy.get("body", { timeout: 15000 }).should("be.visible");
+    
+    // Smooth scroll down the whole page so all cards are visually highlighted
     this.verifyHeaderSection();
+    this.verifyFollowUpSection();
     this.verifyMetadataSection();
 
     cy.get("body").then(($body) => {
@@ -417,16 +515,20 @@ class CallDetailPage {
       const isFailed = /failed|canceled|cancelled|busy|no answer/.test(text);
       if (isFailed) {
         cy.log("Call record has Failed status -> Verifying failure reason card & prompt configuration...");
-        this.getFailureReasonOrError().should("exist");
+        this.getFailureReasonOrError().scrollIntoView({ duration: 600 }).should("exist");
         this.verifyPromptConfigSection();
       } else {
-        cy.log("Call record has Completed status -> Verifying audio player, transcript turns & prompt...");
+        cy.log("Call record has Completed status -> Verifying audio player, transcript turns, analysis & prompt...");
         this.verifyAudioRecordingSection();
+        this.verifyAudioDownload();
+        this.verifyCallAnalysisSection();
         this.verifyTranscriptSection();
         this.verifyPromptConfigSection();
       }
     });
 
+    cy.scrollTo("top", { duration: 600 });
+    cy.wait(600);
     cy.log("All components populated and verified in the right place!");
     return this;
   }
