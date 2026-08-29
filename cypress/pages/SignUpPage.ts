@@ -277,7 +277,7 @@ class SignUpPage {
         const isInvalid = confirmInput && confirmInput.validity ? !confirmInput.validity.valid : false;
         expect(hasError || isInvalid || (confirmInput && confirmInput.value !== "")).to.be.true;
       } else {
-        cy.log("ℹ️ Confirm password field is optional/not rendered on current sign-up view");
+        cy.log("Confirm password field is optional/not rendered on current sign-up view");
       }
     });
     return this;
@@ -296,7 +296,7 @@ class SignUpPage {
           expect(hasError || isInvalid || (phoneInput && phoneInput.getAttribute("aria-invalid") === "true") || (phoneInput && phoneInput.value === "12345")).to.be.true;
         }
       } else {
-        cy.log("ℹ️ Phone number field is optional/not rendered on current sign-up view");
+        cy.log("Phone number field is optional/not rendered on current sign-up view");
       }
     });
     return this;

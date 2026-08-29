@@ -20,6 +20,7 @@ export default defineConfig({
     MV_TEST_PASSWORD: process.env.MV_TEST_PASSWORD || "",
   },
 
+  chromeWebSecurity: false,
   e2e: {
     baseUrl: process.env.MV_APP_BASE_URL || "https://staging.app.magickvoice.com",
     specPattern: "cypress/e2e/**/*.cy.ts",

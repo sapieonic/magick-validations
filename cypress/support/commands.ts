@@ -44,7 +44,7 @@ Cypress.Commands.add("loginViaUI", (email?: string, password?: string) => {
   const userPassword = password || Cypress.env("MV_TEST_PASSWORD");
 
   if (!userEmail || !userPassword) {
-    cy.log("⚠️ No credentials provided in environment variables, falling back to mock session");
+    cy.log("No credentials provided in environment variables, falling back to mock session");
     cy.mockAuthenticatedSession();
     return;
   }

@@ -122,7 +122,6 @@ class CallsPage {
     return cy.contains("button:visible, a:visible", /Open the Broadcast Composer|Broadcast Composer/i);
   }
 
-  // Page Guide Information Card
   getPageGuideCard() {
     return cy.contains(/page guide/i).closest("[class*='rounded'], [class*='card'], [class*='border'], div");
   }
@@ -172,19 +171,20 @@ class CallsPage {
     return cy.contains("button:visible, [role='combobox']:visible, select:visible, div:visible", /All Directions|Direction/i);
   }
 
-  testDropdown(getDropdown: () => Cypress.Chainable<JQuery<HTMLElement>>) {
+  testDropdown(getDropdown: () => Cypress.Chainable<JQuery<HTMLElement>>, dropdownName: string = "Dropdown") {
+    cy.log(`Interacting with ${dropdownName}...`);
+    getDropdown().scrollIntoView().should("exist");
     getDropdown().then(($el) => {
       if ($el.is("select")) {
         cy.wrap($el).focus();
-        cy.wrap($el).find("option").then(($opts) => {
-          expect($opts.length).to.be.greaterThan(0);
-        });
+        cy.wrap($el).find("option").should("have.length.greaterThan", 0);
       } else {
         cy.wrap($el).click({ force: true });
-        cy.wait(200);
+        cy.wait(400);
         cy.get("body").type("{esc}", { force: true });
       }
     });
+    cy.wait(300);
     return this;
   }
 
@@ -193,8 +193,9 @@ class CallsPage {
   }
 
   filterByPhoneNumber(phone: string) {
-    this.getPhoneSearchInput().clear({ force: true }).type(phone, { force: true });
-    cy.wait(600);
+    cy.log(`Typing phone search: "${phone}"...`);
+    this.getPhoneSearchInput().scrollIntoView().clear({ force: true }).type(phone, { force: true });
+    cy.wait(400);
     return this;
   }
 
@@ -212,9 +213,12 @@ class CallsPage {
   }
 
   selectDateRangeTab(tabName: "Today" | "Last 7 days" | "Custom") {
-    if (tabName === "Today") this.getTodayTab().click({ force: true });
-    else if (tabName === "Last 7 days") this.getLast7DaysTab().click({ force: true });
-    else if (tabName === "Custom") this.getCustomDateTab().click({ force: true });
+    cy.log(`Switching Date Range Tab to: [${tabName}]...`);
+    let tabGetter = this.getTodayTab();
+    if (tabName === "Last 7 days") tabGetter = this.getLast7DaysTab();
+    else if (tabName === "Custom") tabGetter = this.getCustomDateTab();
+
+    tabGetter.scrollIntoView().click({ force: true });
     cy.wait(400);
     return this;
   }
@@ -225,14 +229,12 @@ class CallsPage {
   }
 
   filterByBatchId(batchId: string) {
-    this.getBatchIdSearchInput().clear({ force: true }).type(batchId, { force: true });
-    cy.wait(600);
+    cy.log(`Typing Batch ID search: "${batchId}"...`);
+    this.getBatchIdSearchInput().scrollIntoView().clear({ force: true }).type(batchId, { force: true });
+    cy.wait(400);
     return this;
   }
-
-  // =========================================================================
-  // Main Page Section — Calls Data Table & Rows
-  // =========================================================================
+  
   getCallsTable() {
     return cy.get("table, [role='table'], [class*='table'], [class*='Table'], [class*='tableSection']").first();
   }
@@ -255,13 +257,16 @@ class CallsPage {
   }
 
   verifyTableHeaders() {
-    this.getCallsTable().scrollIntoView();
+    cy.log("Verifying Calls Table column headers...");
+    this.getCallsTable().scrollIntoView().should("exist");
     const expectedHeaders = ["PHONE", "BATCH", "STATUS", "DIRECTION", "PIPELINE", "PROVIDER", "DURATION"];
     expectedHeaders.forEach((header) => {
       cy.contains(new RegExp(`^\\s*${header}\\s*$|\\b${header}\\b`, "i"), { timeout: 10000 })
         .scrollIntoView()
         .should("exist");
+      cy.wait(200);
     });
+    cy.log("All column headers verified and rendered properly");
     return this;
   }
 
