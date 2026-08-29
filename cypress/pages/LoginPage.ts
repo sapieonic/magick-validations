@@ -102,12 +102,20 @@ class LoginPage {
   }
 
   setUserName(username: string) {
-    this.getEmailInput().clear().type(username);
+    if (username) {
+      this.getEmailInput().should("be.visible").clear({ force: true }).type(username, { force: true });
+    } else {
+      this.getEmailInput().clear({ force: true });
+    }
     return this;
   }
 
   setPassword(password: string) {
-    this.getPasswordInput().clear().type(password, { log: false });
+    if (password) {
+      this.getPasswordInput().should("be.visible").clear({ force: true }).type(password, { log: false, force: true });
+    } else {
+      this.getPasswordInput().clear({ force: true });
+    }
     return this;
   }
 
