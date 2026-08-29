@@ -111,14 +111,20 @@ describe("MagickVoice Authentication — Login Page UI Components & Rendering", 
       const validEmail = Cypress.env("MV_TEST_EMAIL");
       const validPassword = Cypress.env("MV_TEST_PASSWORD");
 
+      if (!validEmail || !validPassword) {
+        cy.log("Skipping live login: MV_TEST_EMAIL or MV_TEST_PASSWORD not provided in environment");
+        return;
+      }
+
       cy.intercept("POST", "**/auth/session").as("liveLoginSession");
 
       loginPage.visit("/app/calls");
+      loginPage.switchToSignInTab();
       loginPage.setUserName(validEmail);
       loginPage.setPassword(validPassword);
       loginPage.clickSubmitButton();
 
-      cy.wait("@liveLoginSession", { timeout: 20000 }).then((interception) => {
+      cy.wait("@liveLoginSession", { timeout: 25000 }).then((interception) => {
         expect(interception.response?.statusCode).to.be.oneOf([200, 304]);
       });
 

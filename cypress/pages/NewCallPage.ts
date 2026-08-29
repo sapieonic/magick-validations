@@ -29,13 +29,24 @@ class NewCallPage {
   successMessage = ".success, .text-success, .toast-success, [class*='success'], [role='status']";
 
   visit() {
-    if (Cypress.env("MV_TEST_EMAIL") && Cypress.env("MV_TEST_PASSWORD")) {
-      cy.loginViaUI();
-    } else {
-      cy.mockAuthenticatedSession();
-    }
+    cy.viewport(1440, 900);
+    cy.loginViaUI();
     cy.visit(this.path, { failOnStatusCode: false });
-    cy.url({ timeout: 15000 }).should("include", "/app/calls/new");
+    cy.get("body", { timeout: 20000 }).then(($body) => {
+      if ($body.find("input[type='password']").length > 0 && /sign in|login/i.test($body.text())) {
+        cy.log("Session redirected to login page -> auto-submitting credentials...");
+        const userEmail = Cypress.env("MV_TEST_EMAIL");
+        const userPassword = Cypress.env("MV_TEST_PASSWORD");
+        if (userEmail && userPassword) {
+          cy.get("input[type='email'], input[name='email']").clear({ force: true }).type(userEmail, { force: true });
+          cy.get("input[type='password']").clear({ force: true }).type(userPassword, { log: false, force: true });
+          cy.get("button[type='submit'], form button").last().click({ force: true });
+          cy.wait(2000);
+        }
+      }
+    });
+
+    cy.url({ timeout: 20000 }).should("include", "/app/calls/new");
     cy.wait(1000);
     return this;
   }

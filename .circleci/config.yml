@@ -30,15 +30,10 @@ jobs:
             - node_modules
 
       - run:
-          name: 1. Run Cypress E2E Validations
+          name: Run Cypress E2E UI Validations
           command: |
             mkdir -p cypress/results
             npm run cy:run
-
-      - run:
-          name: 2. Dispatch Live Outbound Calls to 4 Numbers (On 100% Pass)
-          command: |
-            npm run test:dispatch-calls
 
       - store_artifacts:
           path: cypress/screenshots

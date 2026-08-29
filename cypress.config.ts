@@ -18,6 +18,7 @@ export default defineConfig({
     APP_BASE_URL: process.env.MV_APP_BASE_URL || "https://staging.app.magickvoice.com",
     MV_TEST_EMAIL: process.env.MV_TEST_EMAIL || "",
     MV_TEST_PASSWORD: process.env.MV_TEST_PASSWORD || "",
+    MV_TEST_PHONE: process.env.MV_TEST_PHONE || "",
   },
 
   chromeWebSecurity: false,
@@ -34,7 +35,7 @@ export default defineConfig({
       });
 
       on("before:browser:launch", (browser, launchOptions) => {
-        if (browser.family === "chromium") {
+        if (browser.family === "chromium" && browser.name !== "electron") {
           launchOptions.args.push("--disable-gpu-shader-disk-cache");
         }
         return launchOptions;

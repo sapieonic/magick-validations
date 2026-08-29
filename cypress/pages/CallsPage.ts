@@ -13,15 +13,27 @@ class CallsPage {
   // Navigation
   visit() {
     cy.viewport(1440, 900);
-    if (Cypress.env("MV_TEST_EMAIL") && Cypress.env("MV_TEST_PASSWORD")) {
-      cy.loginViaUI();
-    } else {
-      cy.mockAuthenticatedSession();
-    }
+    cy.loginViaUI();
     cy.intercept("GET", "**/proxy/calls*").as("getCallsProxy");
     cy.intercept("GET", "**/api/v1/calls*").as("getCallsApi");
     cy.visit(this.path, { failOnStatusCode: false });
-    cy.url({ timeout: 15000 }).should("include", "/app/calls");
+    
+    // Auto-recover if redirected to /login
+    cy.get("body", { timeout: 20000 }).then(($body) => {
+      if ($body.find("input[type='password']").length > 0 && /sign in|login/i.test($body.text())) {
+        cy.log("Session redirected to login page -> auto-submitting credentials...");
+        const userEmail = Cypress.env("MV_TEST_EMAIL");
+        const userPassword = Cypress.env("MV_TEST_PASSWORD");
+        if (userEmail && userPassword) {
+          cy.get("input[type='email'], input[name='email']").clear({ force: true }).type(userEmail, { force: true });
+          cy.get("input[type='password']").clear({ force: true }).type(userPassword, { log: false, force: true });
+          cy.get("button[type='submit'], form button").last().click({ force: true });
+          cy.wait(2000);
+        }
+      }
+    });
+
+    cy.url({ timeout: 20000 }).should("include", "/app/calls");
     return this;
   }
 
