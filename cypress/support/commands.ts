@@ -82,11 +82,9 @@ Cypress.Commands.add("loginViaUI", (email?: string, password?: string) => {
       cy.url({ timeout: 25000 }).should("include", "/app");
     },
     {
+      cacheAcrossSpecs: true,
       validate() {
-        cy.window().then((win) => {
-          const hasDb = win.indexedDB !== null;
-          expect(hasDb).to.be.true;
-        });
+        cy.getAllCookies().should("not.be.empty");
       },
     }
   );

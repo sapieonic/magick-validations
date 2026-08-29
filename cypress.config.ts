@@ -1,4 +1,28 @@
 import { defineConfig } from "cypress";
+import * as fs from "fs";
+import * as path from "path";
+
+// Auto-load .env variables if .env file exists
+function loadEnvFile(): Record<string, string> {
+  const envPath = path.resolve(__dirname, ".env");
+  const result: Record<string, string> = {};
+  if (fs.existsSync(envPath)) {
+    const content = fs.readFileSync(envPath, "utf-8");
+    for (const line of content.split("\n")) {
+      const match = line.match(/^\s*([\w.-]+)\s*=\s*(.*)?\s*$/);
+      if (match) {
+        let val = (match[2] || "").trim();
+        if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+          val = val.slice(1, -1);
+        }
+        result[match[1]] = val;
+      }
+    }
+  }
+  return result;
+}
+
+const fileEnv = loadEnvFile();
 
 export default defineConfig({
   defaultCommandTimeout: 15000,
@@ -15,15 +39,15 @@ export default defineConfig({
   },
 
   env: {
-    APP_BASE_URL: process.env.MV_APP_BASE_URL || "https://staging.app.magickvoice.com",
-    MV_TEST_EMAIL: process.env.MV_TEST_EMAIL || "",
-    MV_TEST_PASSWORD: process.env.MV_TEST_PASSWORD || "",
-    MV_TEST_PHONE: process.env.MV_TEST_PHONE || "",
+    APP_BASE_URL: process.env.MV_APP_BASE_URL || process.env.CYPRESS_MV_APP_BASE_URL || fileEnv.MV_APP_BASE_URL || "https://staging.app.magickvoice.com",
+    MV_TEST_EMAIL: process.env.MV_TEST_EMAIL || process.env.CYPRESS_MV_TEST_EMAIL || fileEnv.MV_TEST_EMAIL || "",
+    MV_TEST_PASSWORD: process.env.MV_TEST_PASSWORD || process.env.CYPRESS_MV_TEST_PASSWORD || fileEnv.MV_TEST_PASSWORD || "",
+    MV_TEST_PHONE: process.env.MV_TEST_PHONE || process.env.CYPRESS_MV_TEST_PHONE || fileEnv.MV_TEST_PHONE || "",
   },
 
   chromeWebSecurity: false,
   e2e: {
-    baseUrl: process.env.MV_APP_BASE_URL || "https://staging.app.magickvoice.com",
+    baseUrl: process.env.MV_APP_BASE_URL || process.env.CYPRESS_MV_APP_BASE_URL || fileEnv.MV_APP_BASE_URL || "https://staging.app.magickvoice.com",
     specPattern: "cypress/e2e/**/*.cy.ts",
     supportFile: "cypress/support/e2e.ts",
     setupNodeEvents(on, config) {
@@ -37,6 +61,8 @@ export default defineConfig({
       on("before:browser:launch", (browser, launchOptions) => {
         if (browser.family === "chromium" && browser.name !== "electron") {
           launchOptions.args.push("--disable-gpu-shader-disk-cache");
+          launchOptions.args.push("--window-size=1440,900");
+          launchOptions.args.push("--force-device-scale-factor=1");
         }
         return launchOptions;
       });

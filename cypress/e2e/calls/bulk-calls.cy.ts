@@ -1,7 +1,7 @@
 import { callsPage } from "../../pages/CallsPage";
 
 describe("MagickVoice Bulk / Batch Calls — Comprehensive UI & Scenario Validations", () => {
-  const testPhone = Cypress.env("MV_TEST_PHONE") || "+14155552671";
+  const testPhone = Cypress.env("MV_TEST_PHONE");
 
   beforeEach(() => {
     callsPage.visit();
