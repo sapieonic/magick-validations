@@ -31,12 +31,13 @@ describe("MagickVoice New Call Page — Comprehensive Component & Flow Validatio
 
   describe("Iteration 2: Core Form Controls, Dropdowns & Parameter Inputs", () => {
     it("2.1 renders Recipient Phone Number input with type and placeholder attributes", () => {
+      const testPhone = Cypress.env("MV_TEST_PHONE") || "+14155552671";
       newCallPage.getPhoneInput()
         .should("be.visible")
         .and("be.enabled");
 
-      newCallPage.setRecipientPhone("+916371813048");
-      newCallPage.getPhoneInput().should("have.value", "+916371813048");
+      newCallPage.setRecipientPhone(testPhone);
+      newCallPage.getPhoneInput().should("have.value", testPhone);
     });
 
     it("2.2 renders AI Prompt / Template selection dropdown with available options", () => {
@@ -84,7 +85,7 @@ describe("MagickVoice New Call Page — Comprehensive Component & Flow Validatio
     });
 
     it("3.2 submits valid call form, intercepts call dispatch API, and asserts successful 200 response", () => {
-      const testPhone = Cypress.env("MV_TEST_PHONE") || "+916371813048";
+      const testPhone = Cypress.env("MV_TEST_PHONE") || "+14155552671";
 
       cy.intercept("POST", "**/proxy/calls*", {
         statusCode: 200,
@@ -109,7 +110,7 @@ describe("MagickVoice New Call Page — Comprehensive Component & Flow Validatio
     });
 
     it("3.3 displays error notification when call initiation fails (e.g. insufficient credits / rate limit)", () => {
-      const testPhone = Cypress.env("MV_TEST_PHONE") || "+916371813048";
+      const testPhone = Cypress.env("MV_TEST_PHONE") || "+14155552671";
 
       cy.intercept("POST", "**/proxy/calls*", {
         statusCode: 402,

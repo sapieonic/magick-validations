@@ -171,7 +171,7 @@ class CallDetailPage {
     return cy.get("body").then(($body) => {
       const phoneEl = $body.find("*").filter((_, el) => {
         const text = (el.innerText || el.textContent || "").trim();
-        return /\+91\s*63718\s*13048|6371813048|\+?\d[\d\s\-()]{7,}/.test(text);
+        return /\+?\d[\d\s\-()]{7,}/.test(text);
       }).filter(":visible");
       if (phoneEl.length > 0) {
         return cy.wrap(phoneEl.first());

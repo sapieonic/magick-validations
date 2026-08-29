@@ -75,7 +75,7 @@ describe("MagickVoice Calls Dashboard — Comprehensive Main Page, Filters & Tab
     });
 
     it("2.5 accepts and filters by phone number in 'Search phone (exact)...' input field", () => {
-      const testPhone = "+916371813048";
+      const testPhone = Cypress.env("MV_TEST_PHONE") || "+14155552671";
       callsPage.filterByPhoneNumber(testPhone);
       callsPage.getPhoneSearchInput().should("have.value", testPhone);
       callsPage.getPhoneSearchInput().clear({ force: true });
@@ -106,7 +106,7 @@ describe("MagickVoice Calls Dashboard — Comprehensive Main Page, Filters & Tab
       callsPage.verifyTableHeaders();
     });
 
-    it("3.2 validates call records display phone numbers (+91 63718 13048), status badges (Failed/Completed), and direction tags (Outbound)", () => {
+    it("3.2 validates call records display phone numbers, status badges (Failed/Completed), and direction tags (Outbound)", () => {
       callsPage.waitForTableLoaded();
 
       cy.get("body").then(($body) => {
@@ -121,11 +121,11 @@ describe("MagickVoice Calls Dashboard — Comprehensive Main Page, Filters & Tab
         if (!isEmpty && dataRows.length > 0) {
           callsPage.getTableRows().should("have.length.greaterThan", 0);
 
-          // Verify phone number format or test phone in table row
+          // Verify phone number format in table row
           cy.get("body").then(($b) => {
             const hasPhone = $b.find("*").filter((_, el) => {
               const text = (el.innerText || el.textContent || "").trim();
-              return /\+91\s*63718\s*13048|6371813048|\+?\d[\d\s\-()]{7,}/.test(text);
+              return /\+?\d[\d\s\-()]{7,}/.test(text);
             }).length > 0;
             expect(hasPhone, "Call row displays phone number").to.be.true;
           });

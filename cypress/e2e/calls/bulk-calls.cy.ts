@@ -1,7 +1,7 @@
 import { callsPage } from "../../pages/CallsPage";
 
 describe("MagickVoice Bulk / Batch Calls — Comprehensive UI & Scenario Validations", () => {
-  const testPhone = Cypress.env("MV_TEST_PHONE") || "+916371813048";
+  const testPhone = Cypress.env("MV_TEST_PHONE") || "+14155552671";
 
   beforeEach(() => {
     callsPage.visit();
@@ -37,14 +37,14 @@ describe("MagickVoice Bulk / Batch Calls — Comprehensive UI & Scenario Validat
     });
   });
 
-  describe("Suite 2: Batch Calling Scenarios with Recipient Phone (+91 63718 13048)", () => {
+  describe("Suite 2: Batch Calling Scenarios & Submission Validations", () => {
     it("2.1 verifies input validation and submission block when attempting to submit empty batch form", () => {
       callsPage.openBulkCallsModal();
       callsPage.verifyBulkCallsEmptyValidation();
       callsPage.closeBulkCallsModal();
     });
 
-    it("2.2 fills batch form with target phone (+91 63718 13048), configures prompt & pipeline, and validates successful dispatch API response", () => {
+    it("2.2 fills batch form with target phone, configures prompt & pipeline, and validates successful dispatch API response", () => {
       callsPage.openBulkCallsModal();
       callsPage.verifyBulkCallsSuccessDispatch(testPhone);
       callsPage.closeBulkCallsModal();

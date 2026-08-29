@@ -713,14 +713,15 @@ class CallsPage {
     return this;
   }
 
-  verifyBulkCallsSuccessDispatch(phone: string = "+916371813048") {
-    cy.log(`Submitting Batch Call with phone: ${phone} and verifying successful dispatch...`);
+  verifyBulkCallsSuccessDispatch(phone?: string) {
+    const targetPhone = phone || Cypress.env("MV_TEST_PHONE");
+    cy.log(`Submitting Batch Call with phone: ${targetPhone} and verifying successful dispatch...`);
     cy.intercept("POST", "**/proxy/calls*", {
       statusCode: 200,
       body: {
         id: "batch-call-test-1001",
         status: "queued",
-        phone_number: phone,
+        phone_number: targetPhone,
         created_at: new Date().toISOString(),
       },
     }).as("mockBatchCallSuccess");
@@ -734,13 +735,14 @@ class CallsPage {
       },
     }).as("mockBatchCampaignSuccess");
 
-    this.fillBulkCallsBatchForm({ phone });
+    this.fillBulkCallsBatchForm({ phone: targetPhone });
     this.clickBulkCallsSubmit();
     cy.log("Batch call submission completed cleanly in UI");
     return this;
   }
 
-  verifyBulkCallsErrorHandling(phone: string = "+916371813048") {
+  verifyBulkCallsErrorHandling(phone?: string) {
+    const targetPhone = phone || Cypress.env("MV_TEST_PHONE") || "";
     cy.log("Testing Bulk Call API error response handling (402 Insufficient Credits)...");
     cy.intercept("POST", "**/proxy/calls*", {
       statusCode: 402,
@@ -752,7 +754,7 @@ class CallsPage {
       },
     }).as("mockBatchCallError");
 
-    this.fillBulkCallsBatchForm({ phone });
+    this.fillBulkCallsBatchForm({ phone: targetPhone });
     this.clickBulkCallsSubmit();
     cy.log("Handled API error state in Bulk Calls UI");
     return this;
