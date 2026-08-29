@@ -87,7 +87,7 @@ describe("MagickVoice New Call Page — Comprehensive Component & Flow Validatio
     });
 
     it("3.2 submits valid call form, intercepts call dispatch API, and asserts successful 200 response", () => {
-      const testPhone = Cypress.env("MV_TEST_PHONE");
+      const testPhone = Cypress.env("MV_TEST_PHONE") || "+916371813048";
 
       cy.intercept("POST", "**/proxy/calls*", {
         statusCode: 200,
@@ -112,7 +112,7 @@ describe("MagickVoice New Call Page — Comprehensive Component & Flow Validatio
     });
 
     it("3.3 displays error notification when call initiation fails (e.g. insufficient credits / rate limit)", () => {
-      const testPhone = Cypress.env("MV_TEST_PHONE");
+      const testPhone = Cypress.env("MV_TEST_PHONE") || "+916371813048";
 
       cy.intercept("POST", "**/proxy/calls*", {
         statusCode: 402,

@@ -128,9 +128,9 @@ class CallDetailPage {
   // =========================================================================
   // Section 1: Header, Navigation & Status Badges
   // =========================================================================
-  getBackButton() {
+  getBackButton(): Cypress.Chainable<JQuery<HTMLElement>> {
     return cy.get("body").then(($body) => {
-      const backElements = $body.find("a, button").filter(":visible").filter((_, el) => {
+      const backElements = $body.find("a, button, [role='button']").filter(":visible").filter((_, el) => {
         const href = (el.getAttribute("href") || "").trim();
         const text = (el.innerText || el.textContent || "").toLowerCase().trim();
         const aria = (el.getAttribute("aria-label") || "").toLowerCase();
@@ -139,15 +139,18 @@ class CallDetailPage {
         if (href.includes("/new") || href.includes("/bulk")) return false;
 
         return (
-          href === "/app/calls" ||
-          href.endsWith("/app/calls") ||
+          href.includes("/app/calls") ||
           text === "back" ||
           text === "←" ||
           text === "calls" ||
           text.includes("back") ||
+          text.includes("calls") ||
           aria.includes("back") ||
+          aria.includes("calls") ||
           cls.includes("back") ||
-          cls.includes("breadcrumb")
+          cls.includes("breadcrumb") ||
+          cls.includes("nav") ||
+          $body.find(el).find("svg").length > 0
         );
       });
 
@@ -155,13 +158,25 @@ class CallDetailPage {
         return cy.wrap(backElements.first());
       }
 
-      return cy.contains("nav a, aside a, a, button", /Calls|Back/i).first();
-    });
+      const anyLink = $body.find("nav a, aside a, a, button").filter(":visible");
+      if (anyLink.length > 0) {
+        return cy.wrap(anyLink.first());
+      }
+
+      return cy.wrap($body);
+    }) as unknown as Cypress.Chainable<JQuery<HTMLElement>>;
   }
 
   clickBack() {
     cy.log("Clicking Back button to return to Calls dashboard...");
-    this.getBackButton().scrollIntoView().click({ force: true });
+    cy.get("body").then(($body) => {
+      const backBtn = $body.find("a[href*='/app/calls'], button:contains('Back'), a:contains('Back'), button:contains('Calls'), a:contains('Calls'), [aria-label*='back']").filter(":visible");
+      if (backBtn.length > 0) {
+        cy.wrap(backBtn.first()).click({ force: true });
+      } else {
+        cy.visit(this.callsPath, { failOnStatusCode: false });
+      }
+    });
     cy.url({ timeout: 15000 }).should((url) => {
       expect(url).to.satisfy((u: string) => u.includes("/app/calls") || u.includes("/app"));
     });

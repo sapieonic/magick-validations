@@ -5,6 +5,8 @@ executors:
     docker:
       - image: cypress/browsers:node-24.0.0-chrome-136.0.7103.92-1-ff-138.0.1-edge-136.0.3240.50-1
     working_directory: ~/magickvoice-validations
+    environment:
+      XDG_RUNTIME_DIR: /tmp
 
 jobs:
   run-pipeline:

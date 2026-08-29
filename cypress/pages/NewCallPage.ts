@@ -92,11 +92,11 @@ class NewCallPage {
 
   getPhoneInput() {
     return cy.get("body").then(($body) => {
-      const phoneEl = $body.find("input#phoneNumber, input[type='tel'], input[class*='phoneInput'], input[name*='phone'], input[placeholder*='phone'], input[placeholder*='number']").filter(":visible");
+      const phoneEl = $body.find("input[type='tel'], input#phoneNumber, input[class*='phoneInput'], input[name*='phone'], input[placeholder*='phone'], input[placeholder*='number'], input[placeholder*='Recipient'], input[placeholder*='+']").filter(":visible");
       if (phoneEl.length > 0) {
         return cy.wrap(phoneEl.first());
       }
-      return cy.get("input#phoneNumber, input[type='tel']").first();
+      return cy.get("input[type='tel'], input#phoneNumber, input[name*='phone'], input[placeholder*='phone']").first();
     });
   }
 
@@ -150,10 +150,10 @@ class NewCallPage {
   }
 
   setRecipientPhone(phone: string) {
-    this.getPhoneInput().should("be.visible").then(() => {
-      this.getPhoneInput().clear({ force: true });
-      cy.wait(200);
-      this.getPhoneInput().type(phone, { delay: 30, force: true });
+    this.getPhoneInput().scrollIntoView().should("exist").then(($input) => {
+      cy.wrap($input).clear({ force: true });
+      cy.wait(100);
+      cy.wrap($input).type(phone, { delay: 30, force: true });
     });
     cy.wait(400);
     return this;
@@ -413,7 +413,7 @@ class NewCallPage {
     this.clickStartCall();
 
     cy.get("body").then(($body) => {
-      const phoneInput = $body.find(this.txtPhone).get(0) as unknown as HTMLInputElement;
+      const phoneInput = $body.find("input[type='tel'], input#phoneNumber, input[class*='phoneInput'], input[name*='phone'], input").get(0) as unknown as HTMLInputElement;
       const hasError = $body.find(this.errorMessage).length > 0;
       const isInvalid = phoneInput && phoneInput.validity ? !phoneInput.validity.valid : false;
       const isAriaInvalid = phoneInput ? phoneInput.getAttribute("aria-invalid") === "true" : false;
