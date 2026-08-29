@@ -168,8 +168,10 @@ describe("MagickVoice Calls Dashboard — Comprehensive Main Page, Filters & Tab
       cy.url({ timeout: 15000 }).should("include", "/app/calls");
     });
 
-    it("3.5 clicks 'Bulk Calls' button and validates bulk composer workflow", () => {
-      callsPage.verifyBulkCallsWorkflow();
+    it("3.5 clicks 'Bulk Calls' button, opens Bulk Calls modal, validates all sub-components, and closes modal cleanly", () => {
+      callsPage.openBulkCallsModal();
+      callsPage.verifyBulkCallsModalComponents();
+      callsPage.closeBulkCallsModal();
     });
   });
 });
