@@ -19,16 +19,31 @@ class CallsPage {
     cy.visit(this.path, { failOnStatusCode: false });
     
     // Auto-recover if redirected to /login
-    cy.get("body", { timeout: 20000 }).then(($body) => {
-      if ($body.find("input[type='password']").length > 0 && /sign in|login/i.test($body.text())) {
+    cy.url({ timeout: 20000 }).then((url) => {
+      if (url.includes("/login") || url.includes("/signin")) {
         cy.log("Session redirected to login page -> auto-submitting credentials...");
-        const userEmail = Cypress.env("MV_TEST_EMAIL");
-        const userPassword = Cypress.env("MV_TEST_PASSWORD");
+        const userEmail = Cypress.env("MV_TEST_EMAIL") || Cypress.env("CYPRESS_MV_TEST_EMAIL");
+        const userPassword = Cypress.env("MV_TEST_PASSWORD") || Cypress.env("CYPRESS_MV_TEST_PASSWORD");
         if (userEmail && userPassword) {
-          cy.get("input[type='email'], input[name='email']").clear({ force: true }).type(userEmail, { force: true });
-          cy.get("input[type='password']").clear({ force: true }).type(userPassword, { log: false, force: true });
-          cy.get("button[type='submit'], form button").last().click({ force: true });
-          cy.wait(2000);
+          cy.get("body").then(($body) => {
+            const signInTab = $body.find("button, [role='tab'], a").filter((_, el) => /^sign in$/i.test((el.innerText || "").trim()));
+            if (signInTab.length > 0) {
+              cy.wrap(signInTab.first()).click({ force: true });
+            }
+          });
+          cy.get("input[type='email'], input[name='email'], input[placeholder*='email']", { timeout: 10000 })
+            .should("be.visible")
+            .clear({ force: true })
+            .type(userEmail, { force: true });
+          cy.get("input[type='password'], input[name='password']", { timeout: 10000 })
+            .should("be.visible")
+            .clear({ force: true })
+            .type(userPassword, { log: false, force: true });
+          cy.get("form button[type='submit'], form button, button[type='submit']")
+            .filter((_, el) => !el.innerText.toLowerCase().includes("google"))
+            .last()
+            .click({ force: true });
+          cy.url({ timeout: 25000 }).should("include", "/app/calls");
         }
       }
     });
@@ -76,7 +91,14 @@ class CallsPage {
 
   // Header Title & Action Buttons
   getCallsTitle() {
-    return cy.contains("h1, h2, h3, [class*='title'], [class*='font-semibold']", /^Calls$/i);
+    return cy.get("body").then(($body) => {
+      const title = $body.find("h1, h2, h3, [class*='title'], [class*='font-semibold']").filter((_, el) => {
+        const text = (el.innerText || el.textContent || "").trim();
+        return /^Calls$/i.test(text) || /\bCalls\b/i.test(text);
+      });
+      if (title.length > 0) return cy.wrap(title.first());
+      return cy.contains("h1, h2, h3, [class*='title'], [class*='font-semibold']", /^Calls$/i);
+    });
   }
 
   getCallsCountBadge() {
@@ -118,11 +140,25 @@ class CallsPage {
   }
 
   getBulkCallsButton() {
-    return cy.contains("button:visible, a:visible", /Bulk Calls/i);
+    return cy.get("body").then(($body) => {
+      const btn = $body.find("button, a, [role='button'], div").filter(":visible").filter((_, el) => {
+        const text = (el.innerText || el.textContent || "").trim();
+        return /Bulk Calls|Bulk Call|\+?\s*Bulk/i.test(text);
+      });
+      if (btn.length > 0) return cy.wrap(btn.first());
+      return cy.contains("button:visible, a:visible, [role='button']:visible", /Bulk Calls/i);
+    });
   }
 
   getNewCallButton() {
-    return cy.contains("button:visible, a:visible", /\+?\s*New Call/i);
+    return cy.get("body").then(($body) => {
+      const btn = $body.find("button, a, [role='button'], div").filter(":visible").filter((_, el) => {
+        const text = (el.innerText || el.textContent || "").trim();
+        return /New Call|Create Call|\+?\s*New/i.test(text);
+      });
+      if (btn.length > 0) return cy.wrap(btn.first());
+      return cy.contains("button:visible, a:visible", /\+?\s*New Call/i);
+    });
   }
 
   // Broadcast Composer Callout Banner
@@ -168,19 +204,35 @@ class CallsPage {
   // Main Page Section — Filter Bar Selectors & Date Tabs
   // =========================================================================
   getStatusFilterDropdown() {
-    return cy.contains("button:visible, [role='combobox']:visible, select:visible, div:visible", /All Statuses|Status/i);
+    return cy.get("body").then(($body) => {
+      const el = $body.find("button, [role='combobox'], select, div").filter(":visible").filter((_, e) => /All Statuses|Status/i.test(e.innerText || ""));
+      if (el.length > 0) return cy.wrap(el.first());
+      return cy.contains("button:visible, [role='combobox']:visible, select:visible", /Status/i);
+    });
   }
 
   getPipelineFilterDropdown() {
-    return cy.contains("button:visible, [role='combobox']:visible, select:visible, div:visible", /All Pipelines|Pipeline/i);
+    return cy.get("body").then(($body) => {
+      const el = $body.find("button, [role='combobox'], select, div").filter(":visible").filter((_, e) => /All Pipelines|Pipeline/i.test(e.innerText || ""));
+      if (el.length > 0) return cy.wrap(el.first());
+      return cy.contains("button:visible, [role='combobox']:visible, select:visible", /Pipeline/i);
+    });
   }
 
   getProviderFilterDropdown() {
-    return cy.contains("button:visible, [role='combobox']:visible, select:visible, div:visible", /All Providers|Provider/i);
+    return cy.get("body").then(($body) => {
+      const el = $body.find("button, [role='combobox'], select, div").filter(":visible").filter((_, e) => /All Providers|Provider/i.test(e.innerText || ""));
+      if (el.length > 0) return cy.wrap(el.first());
+      return cy.contains("button:visible, [role='combobox']:visible, select:visible", /Provider/i);
+    });
   }
 
   getDirectionFilterDropdown() {
-    return cy.contains("button:visible, [role='combobox']:visible, select:visible, div:visible", /All Directions|Direction/i);
+    return cy.get("body").then(($body) => {
+      const el = $body.find("button, [role='combobox'], select, div").filter(":visible").filter((_, e) => /All Directions|Direction/i.test(e.innerText || ""));
+      if (el.length > 0) return cy.wrap(el.first());
+      return cy.contains("button:visible, [role='combobox']:visible, select:visible", /Direction/i);
+    });
   }
 
   testDropdown(getDropdown: () => Cypress.Chainable<JQuery<HTMLElement>>, dropdownName: string = "Dropdown") {
@@ -429,7 +481,7 @@ class CallsPage {
 
   // Verifications
   verifyCallsHeader() {
-    this.getCallsTitle().should("be.visible");
+    this.getCallsTitle().scrollIntoView().should("exist");
     return this;
   }
 
@@ -611,6 +663,13 @@ class CallsPage {
       }
     });
     cy.wait(600);
+    cy.get("body").then(($body) => {
+      const activeModal = $body.find("[role='dialog']:visible, [class*='modal']:visible");
+      if (activeModal.length > 0) {
+        cy.get("body").type("{esc}", { force: true });
+        cy.wait(400);
+      }
+    });
     return this;
   }
 

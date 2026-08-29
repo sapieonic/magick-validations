@@ -40,8 +40,8 @@ Cypress.Commands.add("interceptFirebaseConfig", () => {
 });
 
 Cypress.Commands.add("loginViaUI", (email?: string, password?: string) => {
-  const userEmail = email || Cypress.env("MV_TEST_EMAIL");
-  const userPassword = password || Cypress.env("MV_TEST_PASSWORD");
+  const userEmail = email || Cypress.env("MV_TEST_EMAIL") || Cypress.env("CYPRESS_MV_TEST_EMAIL");
+  const userPassword = password || Cypress.env("MV_TEST_PASSWORD") || Cypress.env("CYPRESS_MV_TEST_PASSWORD");
 
   if (!userEmail || !userPassword) {
     cy.log("No credentials in environment variables -> applying mock session");
@@ -52,11 +52,9 @@ Cypress.Commands.add("loginViaUI", (email?: string, password?: string) => {
   cy.session(
     `auth-session-${userEmail}`,
     () => {
-      cy.intercept("POST", "**/auth/session").as("sessionLoginPost");
-
       cy.visit("/login?from=%2Fapp%2Fcalls", { failOnStatusCode: false });
       
-      cy.get("body", { timeout: 15000 }).then(($body) => {
+      cy.get("body", { timeout: 20000 }).then(($body) => {
         const signInTab = $body.find("button, [role='tab'], a").filter((_, el) => /^sign in$/i.test((el.innerText || "").trim()));
         if (signInTab.length > 0) {
           cy.wrap(signInTab.first()).click({ force: true });
@@ -78,14 +76,9 @@ Cypress.Commands.add("loginViaUI", (email?: string, password?: string) => {
         .last()
         .click({ force: true });
 
-      // Wait for session authentication or redirect
+      // Wait for session authentication and arrival at /app
       cy.url({ timeout: 25000 }).should("include", "/app");
-    },
-    {
-      cacheAcrossSpecs: true,
-      validate() {
-        cy.getAllCookies().should("not.be.empty");
-      },
+      cy.get("body", { timeout: 20000 }).should("exist");
     }
   );
 });

@@ -53,18 +53,18 @@ workflows:
     jobs:
       - run-pipeline:
           context:
-            - magickvoice-staging
+            - magickvoice-validation
 
   daily-scheduled-pipeline:
     triggers:
       - schedule:
           cron: "30 5 * * *"
-          filters:
-            branches:
-              only:
-                - main
-                - /feat\/.*/
+        filters:
+          branches:
+            only:
+              - main
+              - /feat\/.*/
     jobs:
       - run-pipeline:
           context:
-            - magickvoice-staging
+            - magickvoice-validation

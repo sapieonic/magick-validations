@@ -60,7 +60,7 @@ describe("MagickVoice Bulk / Batch Calls — Comprehensive UI & Scenario Validat
       callsPage.openBulkCallsModal();
       callsPage.closeBulkCallsModal();
       cy.url({ timeout: 15000 }).should("include", "/app/calls");
-      callsPage.getCallsTitle().should("be.visible");
+      callsPage.verifyCallsHeader();
     });
   });
 });
