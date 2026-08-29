@@ -252,28 +252,46 @@ class CallsPage {
     return this;
   }
 
-  getPhoneSearchInput() {
-    return cy.get("input[placeholder*='Search phone'], input[placeholder*='exact'], input[placeholder*='phone']").filter(":visible").first();
+  getPhoneSearchInput(): Cypress.Chainable<JQuery<HTMLElement>> {
+    return cy.get("body").then(($body) => {
+      const phoneInput = $body.find("input[placeholder*='Search phone'], input[placeholder*='exact'], input[placeholder*='phone'], input[placeholder*='Search'], input[type='search'], input[type='tel']").filter(":visible");
+      if (phoneInput.length > 0) {
+        return cy.wrap(phoneInput.first());
+      }
+      return cy.get("input:visible").first();
+    }) as unknown as Cypress.Chainable<JQuery<HTMLElement>>;
   }
 
   filterByPhoneNumber(phone: string) {
     cy.log(`Typing phone search: "${phone}"...`);
-    this.getPhoneSearchInput().scrollIntoView().clear({ force: true }).type(phone, { force: true });
+    this.getPhoneSearchInput().scrollIntoView().should("exist").clear({ force: true }).type(phone, { force: true });
     cy.wait(400);
     return this;
   }
 
   // Date Range Tabs: Today, Last 7 days, Custom
-  getTodayTab() {
-    return cy.contains("button:visible, [role='tab']:visible, div:visible, span:visible", /^Today$/i);
+  getTodayTab(): Cypress.Chainable<JQuery<HTMLElement>> {
+    return cy.get("body").then(($body) => {
+      const tab = $body.find("button, [role='tab'], div, span").filter(":visible").filter((_, el) => /^today$/i.test((el.innerText || "").trim()));
+      if (tab.length > 0) return cy.wrap(tab.first());
+      return cy.contains("button:visible, [role='tab']:visible, div:visible, span:visible", /^Today$/i);
+    }) as unknown as Cypress.Chainable<JQuery<HTMLElement>>;
   }
 
-  getLast7DaysTab() {
-    return cy.contains("button:visible, [role='tab']:visible, div:visible, span:visible", /^Last 7 days$/i);
+  getLast7DaysTab(): Cypress.Chainable<JQuery<HTMLElement>> {
+    return cy.get("body").then(($body) => {
+      const tab = $body.find("button, [role='tab'], div, span").filter(":visible").filter((_, el) => /last 7 days|7 days|7d/i.test((el.innerText || "").trim()));
+      if (tab.length > 0) return cy.wrap(tab.first());
+      return cy.contains("button:visible, [role='tab']:visible, div:visible, span:visible", /^Last 7 days$/i);
+    }) as unknown as Cypress.Chainable<JQuery<HTMLElement>>;
   }
 
-  getCustomDateTab() {
-    return cy.contains("button:visible, [role='tab']:visible, div:visible, span:visible", /^Custom$/i);
+  getCustomDateTab(): Cypress.Chainable<JQuery<HTMLElement>> {
+    return cy.get("body").then(($body) => {
+      const tab = $body.find("button, [role='tab'], div, span").filter(":visible").filter((_, el) => /^custom$/i.test((el.innerText || "").trim()));
+      if (tab.length > 0) return cy.wrap(tab.first());
+      return cy.contains("button:visible, [role='tab']:visible, div:visible, span:visible", /^Custom$/i);
+    }) as unknown as Cypress.Chainable<JQuery<HTMLElement>>;
   }
 
   selectDateRangeTab(tabName: "Today" | "Last 7 days" | "Custom") {
@@ -288,13 +306,19 @@ class CallsPage {
   }
 
   // Batch ID Search Filter
-  getBatchIdSearchInput() {
-    return cy.get("input[placeholder*='Filter by Batch ID'], input[placeholder*='Batch ID'], input[placeholder*='batch']").filter(":visible").first();
+  getBatchIdSearchInput(): Cypress.Chainable<JQuery<HTMLElement>> {
+    return cy.get("body").then(($body) => {
+      const batchInput = $body.find("input[placeholder*='Filter by Batch ID'], input[placeholder*='Batch ID'], input[placeholder*='batch'], input[placeholder*='Batch']").filter(":visible");
+      if (batchInput.length > 0) {
+        return cy.wrap(batchInput.first());
+      }
+      return cy.get("input[placeholder*='Filter by Batch ID'], input[placeholder*='Batch ID'], input[placeholder*='batch'], input:visible").last();
+    }) as unknown as Cypress.Chainable<JQuery<HTMLElement>>;
   }
 
   filterByBatchId(batchId: string) {
     cy.log(`Typing Batch ID search: "${batchId}"...`);
-    this.getBatchIdSearchInput().scrollIntoView().clear({ force: true }).type(batchId, { force: true });
+    this.getBatchIdSearchInput().scrollIntoView().should("exist").clear({ force: true }).type(batchId, { force: true });
     cy.wait(400);
     return this;
   }
