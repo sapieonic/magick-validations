@@ -394,6 +394,19 @@ class NewCallPage {
     });
     return this;
   }
+
+  dispatchOutboundCall(phone: string) {
+    cy.log(`Initiating outbound call to: ${phone}...`);
+    this.visit();
+    this.fillNewCallForm({
+      phone,
+      firstMessage: "Hello! This is a live verification call from the MagickVoice automated testing pipeline.",
+    });
+    this.clickStartCall();
+    cy.wait(3000);
+    cy.log(`Outbound call dispatched to: ${phone}`);
+    return this;
+  }
 }
 
 export const newCallPage = new NewCallPage();

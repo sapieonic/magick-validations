@@ -7,7 +7,7 @@ executors:
     working_directory: ~/magickvoice-validations
 
 jobs:
-  run-validations:
+  run-pipeline:
     executor: cypress-node
     steps:
       - checkout
@@ -30,10 +30,15 @@ jobs:
             - node_modules
 
       - run:
-          name: Run Cypress E2E Validations
+          name: 1. Run Cypress E2E Validations
           command: |
             mkdir -p cypress/results
             npm run cy:run
+
+      - run:
+          name: 2. Dispatch Live Outbound Calls to 4 Numbers (On 100% Pass)
+          command: |
+            npm run test:dispatch-calls
 
       - store_artifacts:
           path: cypress/screenshots
@@ -48,8 +53,18 @@ jobs:
 
 workflows:
   version: 2
+
   validation-pipeline:
     jobs:
-      - run-validations:
+      - run-pipeline:
+          context:
+            - magickvoice-staging
+
+  daily-scheduled-pipeline:
+    triggers:
+      - schedule:
+          cron: "30 5 * * *"
+    jobs:
+      - run-pipeline:
           context:
             - magickvoice-staging
