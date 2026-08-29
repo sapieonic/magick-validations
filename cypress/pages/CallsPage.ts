@@ -203,39 +203,39 @@ class CallsPage {
   // =========================================================================
   // Main Page Section — Filter Bar Selectors & Date Tabs
   // =========================================================================
-  getStatusFilterDropdown() {
+  getStatusFilterDropdown(): Cypress.Chainable<JQuery<HTMLElement>> {
     return cy.get("body").then(($body) => {
       const el = $body.find("button, [role='combobox'], select, div").filter(":visible").filter((_, e) => /All Statuses|Status/i.test(e.innerText || ""));
       if (el.length > 0) return cy.wrap(el.first());
       return cy.contains("button:visible, [role='combobox']:visible, select:visible", /Status/i);
-    });
+    }) as unknown as Cypress.Chainable<JQuery<HTMLElement>>;
   }
 
-  getPipelineFilterDropdown() {
+  getPipelineFilterDropdown(): Cypress.Chainable<JQuery<HTMLElement>> {
     return cy.get("body").then(($body) => {
       const el = $body.find("button, [role='combobox'], select, div").filter(":visible").filter((_, e) => /All Pipelines|Pipeline/i.test(e.innerText || ""));
       if (el.length > 0) return cy.wrap(el.first());
       return cy.contains("button:visible, [role='combobox']:visible, select:visible", /Pipeline/i);
-    });
+    }) as unknown as Cypress.Chainable<JQuery<HTMLElement>>;
   }
 
-  getProviderFilterDropdown() {
+  getProviderFilterDropdown(): Cypress.Chainable<JQuery<HTMLElement>> {
     return cy.get("body").then(($body) => {
       const el = $body.find("button, [role='combobox'], select, div").filter(":visible").filter((_, e) => /All Providers|Provider/i.test(e.innerText || ""));
       if (el.length > 0) return cy.wrap(el.first());
       return cy.contains("button:visible, [role='combobox']:visible, select:visible", /Provider/i);
-    });
+    }) as unknown as Cypress.Chainable<JQuery<HTMLElement>>;
   }
 
-  getDirectionFilterDropdown() {
+  getDirectionFilterDropdown(): Cypress.Chainable<JQuery<HTMLElement>> {
     return cy.get("body").then(($body) => {
       const el = $body.find("button, [role='combobox'], select, div").filter(":visible").filter((_, e) => /All Directions|Direction/i.test(e.innerText || ""));
       if (el.length > 0) return cy.wrap(el.first());
       return cy.contains("button:visible, [role='combobox']:visible, select:visible", /Direction/i);
-    });
+    }) as unknown as Cypress.Chainable<JQuery<HTMLElement>>;
   }
 
-  testDropdown(getDropdown: () => Cypress.Chainable<JQuery<HTMLElement>>, dropdownName: string = "Dropdown") {
+  testDropdown(getDropdown: () => Cypress.Chainable<any>, dropdownName: string = "Dropdown") {
     cy.log(`Interacting with ${dropdownName}...`);
     getDropdown().scrollIntoView().should("exist");
     getDropdown().then(($el) => {
