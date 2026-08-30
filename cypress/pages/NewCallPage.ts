@@ -417,7 +417,7 @@ class NewCallPage {
       const hasError = $body.find(this.errorMessage).length > 0;
       const isInvalid = phoneInput && phoneInput.validity ? !phoneInput.validity.valid : false;
       const isAriaInvalid = phoneInput ? phoneInput.getAttribute("aria-invalid") === "true" : false;
-      expect(hasError || isInvalid || isAriaInvalid || true).to.be.true;
+      expect(hasError || isInvalid || isAriaInvalid).to.be.true;
     });
     return this;
   }
