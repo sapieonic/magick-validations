@@ -1,0 +1,28 @@
+{
+  "name": "magickvoice-validations",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Cypress test suite for MagickVoice authentication and UI page validations",
+  "scripts": {
+    "cy:open": "cypress open",
+    "cy:run": "cypress run --browser chrome --spec 'cypress/e2e/**/*.cy.ts'",
+    "test:auth": "cypress run --spec 'cypress/e2e/auth/**/*.cy.ts'",
+    "test:login": "cypress run --spec cypress/e2e/auth/login.cy.ts",
+    "test:signup": "cypress run --spec cypress/e2e/auth/signup.cy.ts",
+    "test:auth:chrome": "cypress run --spec 'cypress/e2e/auth/**/*.cy.ts' --browser chrome",
+    "test:auth:firefox": "cypress run --spec 'cypress/e2e/auth/**/*.cy.ts' --browser firefox",
+    "test:auth:edge": "cypress run --spec 'cypress/e2e/auth/**/*.cy.ts' --browser edge",
+    "test:calls": "cypress run --spec 'cypress/e2e/calls/**/*.cy.ts'",
+    "test:call-details": "cypress run --spec cypress/e2e/calls/call-details.cy.ts",
+    "test:new-call": "cypress run --spec cypress/e2e/calls/new-call.cy.ts",
+    "test:bulk-calls": "cypress run --spec cypress/e2e/calls/bulk-calls.cy.ts",
+    "test": "npm run cy:run"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "cypress": "^13.13.0",
+    "cypress-multi-reporters": "^1.6.4",
+    "mocha-junit-reporter": "^2.2.1",
+    "typescript": "^5.5.0"
+  }
+}
