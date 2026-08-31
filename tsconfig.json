@@ -1,0 +1,30 @@
+{
+  "compilerOptions": {
+    /* Basic Options */
+    "target": "ES2024",
+    "lib": ["ES2024","DOM"],
+    /* Modules */
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    /* Type Checking */
+    "strict": true,
+    "skipLibCheck": true,
+    /* Linting */
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "erasableSyntaxOnly": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedSideEffectImports": true,
+    /* Other */
+    "isolatedModules": true,
+    "types": [
+      "cypress",
+      "node"
+    ],
+    "noEmit": true,
+  },
+  "include": ["cypress/**/*.ts", "cypress.config.ts"],
+  "exclude": ["node_modules","dist"]
+}

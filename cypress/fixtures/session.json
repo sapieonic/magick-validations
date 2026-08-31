@@ -1,0 +1,70 @@
+{
+  "user": {
+    "id": "mock-user-uuid-1001",
+    "firebase_uid": "mock-firebase-uid-1001",
+    "email": "test-user@magickvoice.com",
+    "display_name": "Test User",
+    "avatar_url": "https://avatar.vercel.sh/test-user",
+    "status": "active",
+    "created_at": "2026-08-23T18:24:20.750Z",
+    "updated_at": "2026-08-23T18:24:28.428Z",
+    "phone_number": "+15551234567"
+  },
+  "tenants": [
+    {
+      "id": "mock-tenant-uuid-1001",
+      "name": "Test Organization",
+      "slug": "test-org",
+      "settings": {
+        "enable_recording": false,
+        "allowed_pipelines": [
+          "bronze",
+          "copper",
+          "silver",
+          "gold",
+          "gold-ii",
+          "platinum"
+        ]
+      },
+      "status": "active",
+      "created_at": "2026-08-23T18:24:20.750Z",
+      "updated_at": "2026-08-24T14:32:17.995Z"
+    }
+  ],
+  "memberships": [
+    {
+      "id": "mock-membership-uuid-1001",
+      "user_id": "mock-user-uuid-1001",
+      "tenant_id": "mock-tenant-uuid-1001",
+      "account_id": null,
+      "role": "tenant_owner",
+      "status": "active",
+      "invited_by": null,
+      "created_at": "2026-08-23T18:24:20.750Z",
+      "updated_at": "2026-08-23T18:24:20.750Z"
+    }
+  ],
+  "governance": {
+    "calls": true,
+    "calls.analytics": true,
+    "calls.recording": true,
+    "calls.dialer": false,
+    "calls.dialer.analytics": false,
+    "sip": false,
+    "messaging": true,
+    "messaging.whatsapp": true,
+    "messaging.telegram": true,
+    "messaging.email": true,
+    "messaging.whatsapp_personal": false,
+    "messaging.whatsapp_personal_groups": false,
+    "ivr": true,
+    "campaigns": true,
+    "scheduling": true,
+    "knowledge_bases": false,
+    "escalation": false,
+    "agency": false,
+    "agency.recording": false,
+    "agency.analytics": false
+  },
+  "is_new": false
+}
