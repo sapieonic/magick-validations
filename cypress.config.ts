@@ -1,8 +1,8 @@
 import { defineConfig } from "cypress";
 import * as fs from "fs";
 import * as path from "path";
+import { notifySlackOfCypressRun } from "./scripts/slack-notify";
 
-// Auto-load .env variables if .env file exists
 function loadEnvFile(): Record<string, string> {
   const envPath = path.resolve(__dirname, ".env");
   const result: Record<string, string> = {};
@@ -45,9 +45,15 @@ export default defineConfig({
     MV_TEST_EMAIL: process.env.MV_TEST_EMAIL || process.env.CYPRESS_MV_TEST_EMAIL || fileEnv.MV_TEST_EMAIL || "",
     MV_TEST_PASSWORD: process.env.MV_TEST_PASSWORD || process.env.CYPRESS_MV_TEST_PASSWORD || fileEnv.MV_TEST_PASSWORD || "",
     MV_TEST_PHONE: process.env.MV_TEST_PHONE || process.env.CYPRESS_MV_TEST_PHONE || fileEnv.MV_TEST_PHONE || "",
+    SLACK_BOT_TOKEN: process.env.SLACK_BOT_TOKEN || fileEnv.SLACK_BOT_TOKEN || "",
+    SLACK_CHANNEL_ID: process.env.SLACK_CHANNEL_ID || fileEnv.SLACK_CHANNEL_ID || "",
   },
 
   chromeWebSecurity: false,
+  reporter: "cypress-multi-reporters",
+  reporterOptions: {
+    configFile: "reporter-config.json",
+  },
   e2e: {
     baseUrl: process.env.MV_APP_BASE_URL || process.env.CYPRESS_MV_APP_BASE_URL || fileEnv.MV_APP_BASE_URL || "https://staging.app.magickvoice.com",
     specPattern: "cypress/e2e/**/*.cy.ts",
@@ -67,6 +73,13 @@ export default defineConfig({
           launchOptions.args.push("--force-device-scale-factor=1");
         }
         return launchOptions;
+      });
+      
+      on("after:run", async (results) => {
+        await notifySlackOfCypressRun(results, {
+          token: config.env.SLACK_BOT_TOKEN,
+          channel: config.env.SLACK_CHANNEL_ID,
+        });
       });
 
       return config;

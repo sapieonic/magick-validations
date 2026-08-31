@@ -293,7 +293,8 @@ class SignUpPage {
         } else {
           const hasError = $body.find(this.txterrormessage).length > 0;
           const isInvalid = phoneInput && phoneInput.validity ? !phoneInput.validity.valid : false;
-          expect(hasError || isInvalid || (phoneInput && phoneInput.getAttribute("aria-invalid") === "true") || (phoneInput && phoneInput.value === "12345")).to.be.true;
+          const isAriaInvalid = phoneInput ? phoneInput.getAttribute("aria-invalid") === "true" : false;
+          expect(hasError || isInvalid || isAriaInvalid).to.be.true;
         }
       } else {
         cy.log("Phone number field is optional/not rendered on current sign-up view");

@@ -9,6 +9,7 @@
     "moduleResolution": "nodenext",
     "esModuleInterop": true,
     "resolveJsonModule": true,
+    "allowJs": true,
     /* Type Checking */
     "strict": true,
     "skipLibCheck": true,

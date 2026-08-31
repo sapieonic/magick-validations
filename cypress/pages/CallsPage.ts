@@ -62,7 +62,6 @@ class CallsPage {
     return this;
   }
 
-  // Top Bar (Organization, Account, Credits, Profile)
   getOrgSwitcher() {
     return cy.get("body").then(($body) => {
       const org = $body.find("button, div[role='button']").filter((_, el) => {
@@ -200,9 +199,6 @@ class CallsPage {
     return this;
   }
 
-  // =========================================================================
-  // Main Page Section — Filter Bar Selectors & Date Tabs
-  // =========================================================================
   getStatusFilterDropdown(): Cypress.Chainable<JQuery<HTMLElement>> {
     return cy.get("body").then(($body) => {
       const el = $body.find("button, [role='combobox'], select, div").filter(":visible").filter((_, e) => /All Statuses|Status/i.test(e.innerText || ""));
@@ -269,7 +265,6 @@ class CallsPage {
     return this;
   }
 
-  // Date Range Tabs: Today, Last 7 days, Custom
   getTodayTab(): Cypress.Chainable<JQuery<HTMLElement>> {
     return cy.get("body").then(($body) => {
       const tab = $body.find("button, [role='tab'], div, span").filter(":visible").filter((_, el) => /^today$/i.test((el.innerText || "").trim()));
