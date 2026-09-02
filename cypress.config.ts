@@ -45,6 +45,7 @@ export default defineConfig({
     MV_TEST_EMAIL: process.env.MV_TEST_EMAIL || process.env.CYPRESS_MV_TEST_EMAIL || fileEnv.MV_TEST_EMAIL || "",
     MV_TEST_PASSWORD: process.env.MV_TEST_PASSWORD || process.env.CYPRESS_MV_TEST_PASSWORD || fileEnv.MV_TEST_PASSWORD || "",
     MV_TEST_PHONE: process.env.MV_TEST_PHONE || process.env.CYPRESS_MV_TEST_PHONE || fileEnv.MV_TEST_PHONE || "",
+    MV_CALL_NUMBERS: process.env.MV_CALL_NUMBERS || process.env.CYPRESS_MV_CALL_NUMBERS || fileEnv.MV_CALL_NUMBERS || "",
     SLACK_BOT_TOKEN: process.env.SLACK_BOT_TOKEN || fileEnv.SLACK_BOT_TOKEN || "",
     SLACK_CHANNEL_ID: process.env.SLACK_CHANNEL_ID || fileEnv.SLACK_CHANNEL_ID || "",
   },
@@ -63,6 +64,12 @@ export default defineConfig({
         log(message: string) {
           console.log(message);
           return null;
+        },
+        findCsvDownload() {
+          const dir = path.resolve(__dirname, "cypress/downloads");
+          if (!fs.existsSync(dir)) return null;
+          const match = fs.readdirSync(dir).find((f) => f.toLowerCase().endsWith(".csv"));
+          return match ? path.join(dir, match) : null;
         },
       });
 

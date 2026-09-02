@@ -15,6 +15,10 @@ executors:
 
 jobs:
   run-pipeline:
+    parameters:
+      dispatch-calls:
+        type: boolean
+        default: false
     executor: cypress-node
     steps:
       - checkout
@@ -42,6 +46,13 @@ jobs:
             mkdir -p cypress/results
             npm run cy:run
 
+      - when:
+          condition: << parameters.dispatch-calls >>
+          steps:
+            - run:
+                name: Dispatch live outbound calls to configured numbers
+                command: npm run test:dispatch-calls
+
       - store_artifacts:
           path: cypress/videos
           destination: cypress-videos
@@ -59,16 +70,9 @@ jobs:
 
 workflows:
   validation-pipeline:
-    when:
-      not: << pipeline.parameters.scheduled-run >>
     jobs:
-      - run-pipeline:
-          context:
-            - magickvoice-validation
 
-  daily-scheduled-pipeline:
-    when: << pipeline.parameters.scheduled-run >>
-    jobs:
       - run-pipeline:
+          dispatch-calls: << pipeline.parameters.scheduled-run >>
           context:
             - magickvoice-validation

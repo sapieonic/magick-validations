@@ -16,6 +16,7 @@
     "test:call-details": "cypress run --spec cypress/e2e/calls/call-details.cy.ts",
     "test:new-call": "cypress run --spec cypress/e2e/calls/new-call.cy.ts",
     "test:bulk-calls": "cypress run --spec cypress/e2e/calls/bulk-calls.cy.ts",
+    "test:dispatch-calls": "cypress run --browser chrome --spec 'cypress/live/dispatch-live-calls.cy.ts' --config 'specPattern=cypress/live/**/*.cy.ts,video=false'",
     "test": "npm run cy:run"
   },
   "devDependencies": {

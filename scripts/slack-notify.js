@@ -1,5 +1,26 @@
 const MAX_FAILURES_LISTED = 15;
 const MAX_MESSAGE_LEN = 300;
+// Slack rejects a message if any section's text exceeds 3000 chars, or if it has
+// more than 50 blocks. Stay comfortably under both.
+const SLACK_SECTION_LIMIT = 2900;
+const MAX_FAILURE_BLOCKS = 10;
+
+// Greedily pack lines into chunks no longer than SLACK_SECTION_LIMIT characters.
+function packLines(lines) {
+  const chunks = [];
+  let current = "";
+  for (const line of lines) {
+    const candidate = current ? `${current}\n${line}` : line;
+    if (candidate.length > SLACK_SECTION_LIMIT && current) {
+      chunks.push(current);
+      current = line;
+    } else {
+      current = candidate;
+    }
+  }
+  if (current) chunks.push(current);
+  return chunks;
+}
 
 function truncate(str, len) {
   return str.length > len ? `${str.slice(0, len)}…` : str;
@@ -55,7 +76,23 @@ function buildSlackMessage(failures, metaOverrides = {}) {
     if (failures.length > listed.length) {
       lines.push(`_…and ${failures.length - listed.length} more_`);
     }
-    blocks.push({ type: "section", text: { type: "mrkdwn", text: lines.join("\n") } });
+
+    const chunks = packLines(lines);
+    for (const chunk of chunks.slice(0, MAX_FAILURE_BLOCKS)) {
+      blocks.push({
+        type: "section",
+        text: { type: "mrkdwn", text: chunk.slice(0, SLACK_SECTION_LIMIT) },
+      });
+    }
+    if (chunks.length > MAX_FAILURE_BLOCKS) {
+      blocks.push({
+        type: "section",
+        text: {
+          type: "mrkdwn",
+          text: `_…${chunks.length - MAX_FAILURE_BLOCKS} more block(s) of failures omitted — open the build for the full list_`,
+        },
+      });
+    }
   }
 
   if (buildUrl) {
@@ -78,6 +115,8 @@ async function postToSlack(message, creds = {}) {
     );
     return;
   }
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 10000);
 
   try {
     const response = await fetch("https://slack.com/api/chat.postMessage", {
@@ -87,6 +126,7 @@ async function postToSlack(message, creds = {}) {
         "Content-Type": "application/json; charset=utf-8",
       },
       body: JSON.stringify({ channel, ...message }),
+      signal: controller.signal,
     });
     const result = await response.json();
     if (!result.ok) {
@@ -95,7 +135,13 @@ async function postToSlack(message, creds = {}) {
     }
     console.log("[slack-notify] Slack notification posted.");
   } catch (err) {
-    console.error(`[slack-notify] failed to reach Slack: ${err.message}`);
+    if (err.name === "AbortError") {
+      console.error("[slack-notify] Slack request timed out after 10s — skipping notification.");
+    } else {
+      console.error(`[slack-notify] failed to reach Slack: ${err.message}`);
+    }
+  } finally {
+    clearTimeout(timer);
   }
 }
 
