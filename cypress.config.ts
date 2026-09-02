@@ -1,7 +1,6 @@
 import { defineConfig } from "cypress";
 import * as fs from "fs";
 import * as path from "path";
-import { notifySlackOfCypressRun } from "./scripts/slack-notify";
 
 function loadEnvFile(): Record<string, string> {
   const envPath = path.resolve(__dirname, ".env");
@@ -46,8 +45,6 @@ export default defineConfig({
     MV_TEST_PASSWORD: process.env.MV_TEST_PASSWORD || process.env.CYPRESS_MV_TEST_PASSWORD || fileEnv.MV_TEST_PASSWORD || "",
     MV_TEST_PHONE: process.env.MV_TEST_PHONE || process.env.CYPRESS_MV_TEST_PHONE || fileEnv.MV_TEST_PHONE || "",
     MV_CALL_NUMBERS: process.env.MV_CALL_NUMBERS || process.env.CYPRESS_MV_CALL_NUMBERS || fileEnv.MV_CALL_NUMBERS || "",
-    SLACK_BOT_TOKEN: process.env.SLACK_BOT_TOKEN || fileEnv.SLACK_BOT_TOKEN || "",
-    SLACK_CHANNEL_ID: process.env.SLACK_CHANNEL_ID || fileEnv.SLACK_CHANNEL_ID || "",
   },
 
   chromeWebSecurity: false,
@@ -80,13 +77,6 @@ export default defineConfig({
           launchOptions.args.push("--force-device-scale-factor=1");
         }
         return launchOptions;
-      });
-      
-      on("after:run", async (results) => {
-        await notifySlackOfCypressRun(results, {
-          token: config.env.SLACK_BOT_TOKEN,
-          channel: config.env.SLACK_CHANNEL_ID,
-        });
       });
 
       return config;

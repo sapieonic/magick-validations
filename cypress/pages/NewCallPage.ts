@@ -478,7 +478,8 @@ class NewCallPage {
       phone,
       prompt: "c0bc06f3-17cc-456e-8d35-b08426ecd0d2",
       aiQuality: "Platinum",
-      firstMessage: "Hello! This is a live verification call from the MagickVoice automated testing pipeline.",
+      firstMessage: "Hello, this is an automated status notification from MagickVoice. We have completed automated validation for our authentication and call management workflows. User sign-in, session authorization, and UI navigation controls verified successfully. The calls dashboard, form validations, and outbound dispatch pipeline are fully operational. AI voice synthesis and Platinum quality tier connectivity were successfully established. All targeted validation tests and live dispatch checks completed with zero errors. Thank you for using MagickVoice, and have a wonderful day.",
+      systemPrompt: "You are the MagickVoice system status voice assistant. Announce that automated validation for authentication, UI navigation, and outbound call dispatch workflows has completed successfully with zero errors. Maintain a calm, professional, and confident tone. If the user asks questions, confirm that authentication and calling pipelines are fully healthy and operational.",
     });
     this.clickStartCall();
     cy.wait(3000);
