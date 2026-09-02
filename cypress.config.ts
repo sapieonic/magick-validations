@@ -57,7 +57,7 @@ export default defineConfig({
   },
   e2e: {
     baseUrl: process.env.MV_APP_BASE_URL || process.env.CYPRESS_MV_APP_BASE_URL || fileEnv.MV_APP_BASE_URL || "https://staging.app.magickvoice.com",
-    specPattern: "cypress/e2e/**/*.cy.ts",
+    specPattern: ["cypress/e2e/**/*.cy.ts", "cypress/live/**/*.cy.ts"],
     supportFile: "cypress/support/e2e.ts",
     setupNodeEvents(on, config) {
       on("task", {
