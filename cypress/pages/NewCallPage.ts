@@ -159,32 +159,66 @@ class NewCallPage {
     return this;
   }
 
-  selectPromptOption(promptNameOrIndex?: string | number) {
+  selectPromptOption(promptNameOrId: string = "c0bc06f3-17cc-456e-8d35-b08426ecd0d2") {
+    const targetId = "c0bc06f3-17cc-456e-8d35-b08426ecd0d2";
+    const query = (promptNameOrId || targetId).toString().toLowerCase();
+
     cy.get("body").then(($body) => {
+      // 1. Standard HTML <select> dropdown
       const $promptSelect = $body.find("select#promptTemplate, select[id*='prompt'], select[name*='prompt']");
       if ($promptSelect.length > 0) {
         const selectEl = $promptSelect.get(0) as unknown as HTMLSelectElement;
-        const validOptions = Array.from(selectEl.options).filter(opt => opt.value && opt.value.trim() !== "");
-        if (typeof promptNameOrIndex === "string" && promptNameOrIndex) {
-          cy.wrap($promptSelect.first()).select(promptNameOrIndex, { force: true });
-        } else if (validOptions.length > 0) {
-          cy.wrap($promptSelect.first()).select(validOptions[0].value, { force: true });
-        } else {
-          cy.wrap($promptSelect.first()).select(1, { force: true });
+        const options = Array.from(selectEl.options);
+        const match = options.find((opt) => {
+          const val = (opt.value || "").toLowerCase();
+          const text = (opt.text || "").toLowerCase();
+          return (
+            val === targetId ||
+            val === query ||
+            text.includes("magickvoice system status") ||
+            text.includes("system status notification") ||
+            text.includes("status notification") ||
+            text.includes(query)
+          );
+        });
+
+        if (match) {
+          cy.wrap($promptSelect.first()).select(match.value, { force: true });
+        } else if (promptNameOrId) {
+          cy.wrap($promptSelect.first()).select(promptNameOrId, { force: true });
+        } else if (options.length > 1) {
+          cy.wrap($promptSelect.first()).select(options[1].value, { force: true });
         }
         return;
       }
 
-      const $promptCards = $body.find("[class*='promptCard'], [class*='prompt-card'], [data-testid*='prompt'], [class*='promptItem']");
+      // 2. Clickable prompt cards
+      const $promptCards = $body.find("[class*='promptCard'], [class*='prompt-card'], [data-testid*='prompt'], [class*='promptItem'], [class*='templateCard']");
       if ($promptCards.length > 0) {
-        cy.wrap($promptCards.first()).click({ force: true });
+        const matchedCard = $promptCards.filter((_, el) => {
+          const text = (el.innerText || el.textContent || "").toLowerCase();
+          const id = (el.getAttribute("data-id") || el.getAttribute("data-value") || el.id || "").toLowerCase();
+          return (
+            id.includes(targetId) ||
+            text.includes("magickvoice system status") ||
+            text.includes("system status notification") ||
+            text.includes("status notification") ||
+            text.includes(query)
+          );
+        });
+        if (matchedCard.length > 0) {
+          cy.wrap(matchedCard.first()).click({ force: true });
+        } else {
+          cy.wrap($promptCards.first()).click({ force: true });
+        }
         return;
       }
 
+      // 3. Custom combobox / Radix / HeadlessUI dropdown
       const $combobox = $body.find("button[role='combobox'], div[class*='select']").filter((_, el) => {
         const text = (el.innerText || el.textContent || "").toLowerCase();
         const id = (el.id || "").toLowerCase();
-        return text.includes("prompt") || id.includes("prompt");
+        return text.includes("prompt") || text.includes("template") || id.includes("prompt");
       });
       if ($combobox.length > 0) {
         cy.wrap($combobox.first()).click({ force: true });
@@ -192,12 +226,27 @@ class NewCallPage {
         cy.get("body").then(($b) => {
           const $options = $b.find("[role='option'], [class*='option'], [class*='item'], div[data-value]");
           if ($options.length > 0) {
-            cy.wrap($options.first()).click({ force: true });
+            const matchedOption = $options.filter((_, el) => {
+              const text = (el.innerText || el.textContent || "").toLowerCase();
+              const val = (el.getAttribute("data-value") || el.getAttribute("value") || "").toLowerCase();
+              return (
+                val.includes(targetId) ||
+                text.includes("magickvoice system status") ||
+                text.includes("system status notification") ||
+                text.includes("status notification") ||
+                text.includes(query)
+              );
+            });
+            if (matchedOption.length > 0) {
+              cy.wrap(matchedOption.first()).click({ force: true });
+            } else {
+              cy.wrap($options.first()).click({ force: true });
+            }
           }
         });
       }
     });
-    cy.wait(600);
+    cy.wait(800);
     return this;
   }
 
@@ -220,7 +269,7 @@ class NewCallPage {
     return this;
   }
 
-  selectAiQuality(tier: string = "Gold") {
+  selectAiQuality(tier: string = "Platinum") {
     cy.get("body").then(($body) => {
       const $tiers = $body.find("button, [role='radio'], [role='button'], div[class*='badge']").filter((_, el) => {
         const text = (el.innerText || el.textContent || "").trim();
@@ -239,7 +288,7 @@ class NewCallPage {
     return this;
   }
 
-  fillPromptVariables(defaultText: string = "Fine Dining") {
+  fillPromptVariables(defaultText: string = "Operational") {
     cy.get("body").then(($body) => {
       const $form = $body.find("main form, form, [class*='form']");
       if ($form.length > 0) {
@@ -378,10 +427,10 @@ class NewCallPage {
   }) {
     this.setRecipientPhone(data.phone);
     this.selectCallerIdOption(data.callerId);
-    this.selectPromptOption(data.prompt);
+    this.selectPromptOption(data.prompt || "c0bc06f3-17cc-456e-8d35-b08426ecd0d2");
     cy.wait(1500); // Wait for prompt tools and pipeline options to load
-    this.selectAiQuality(data.aiQuality || "Gold");
-    this.fillPromptVariables("Fine Dining");
+    this.selectAiQuality(data.aiQuality || "Platinum");
+    this.fillPromptVariables("Operational");
     this.selectVoiceOption(data.voice);
     this.checkAllRequiredBoxes();
     if (data.firstMessage) this.setFirstMessage(data.firstMessage);
@@ -427,6 +476,8 @@ class NewCallPage {
     this.visit();
     this.fillNewCallForm({
       phone,
+      prompt: "c0bc06f3-17cc-456e-8d35-b08426ecd0d2",
+      aiQuality: "Platinum",
       firstMessage: "Hello! This is a live verification call from the MagickVoice automated testing pipeline.",
     });
     this.clickStartCall();

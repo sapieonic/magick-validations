@@ -76,7 +76,7 @@ describe("MagickVoice New Call Page — Comprehensive Component & Flow Validatio
     });
 
     it("2.6 renders AI Quality pipeline selection tier options (Bronze, Copper, Silver, Gold, Gold II, Platinum)", () => {
-      newCallPage.selectAiQuality("Gold");
+      newCallPage.selectAiQuality("Platinum");
       cy.get("body").should("exist");
     });
   });
