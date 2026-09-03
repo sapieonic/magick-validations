@@ -1,0 +1,78 @@
+version: 2.1
+
+parameters:
+  scheduled-run:
+    type: boolean
+    default: false
+
+executors:
+  cypress-node:
+    docker:
+      - image: cypress/browsers:node-24.0.0-chrome-136.0.7103.92-1-ff-138.0.1-edge-136.0.3240.50-1
+    working_directory: ~/magickvoice-validations
+    environment:
+      XDG_RUNTIME_DIR: /tmp
+
+jobs:
+  run-pipeline:
+    parameters:
+      dispatch-calls:
+        type: boolean
+        default: false
+    executor: cypress-node
+    steps:
+      - checkout
+
+      - restore_cache:
+          keys:
+            - v1-deps-{{ checksum "package-lock.json" }}
+            - v1-deps-{{ checksum "package.json" }}
+            - v1-deps-
+
+      - run:
+          name: Install dependencies
+          command: npm ci
+
+      - save_cache:
+          key: v1-deps-{{ checksum "package-lock.json" }}
+          paths:
+            - ~/.npm
+            - ~/.cache/Cypress
+            - node_modules
+
+      - run:
+          name: Run Cypress E2E UI Validations
+          command: |
+            mkdir -p cypress/results
+            npm run cy:run
+
+      - when:
+          condition: << parameters.dispatch-calls >>
+          steps:
+            - run:
+                name: Dispatch live outbound calls to configured numbers
+                command: npm run test:dispatch-calls
+
+      - store_artifacts:
+          path: cypress/videos
+          destination: cypress-videos
+
+      - store_artifacts:
+          path: cypress/screenshots
+          destination: cypress-screenshots
+
+      - store_artifacts:
+          path: cypress/downloads
+          destination: cypress-downloads
+
+      - store_test_results:
+          path: cypress/results
+
+workflows:
+  validation-pipeline:
+    jobs:
+
+      - run-pipeline:
+          dispatch-calls: << pipeline.parameters.scheduled-run >>
+          context:
+            - magickvoice-validation
